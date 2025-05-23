@@ -1,2 +1,11 @@
 # Proyecto_AIRV
-Repositorio del proyecto AIRV hecho
+Acá voy a dejar las tareas pendientes que tiene cada integrante:
+
+## Gabriel
+# .
+
+## Salvador
+# .
+
+## Fran
+# .
