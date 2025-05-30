@@ -21,7 +21,7 @@ def listen(device_index=None):
             audio = recognizer.listen(source, timeout=15, phrase_time_limit=5)
             print("Procesando...")
             texto = recognizer.recognize_google(audio, language="es-ES")
-            return speak(texto)
+            return texto
         except sr.WaitTimeoutError:
             print("No se detectó voz a tiempo, intenta hablar más claro o rápido.")
             speak("No llegué a capturar")
