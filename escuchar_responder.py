@@ -1,67 +1,35 @@
 import speech_recognition as sr
 import edge_tts
-import pygame
-import asyncio
-
-def get_working_microphone():
-    mic_list = sr.Microphone.list_microphone_names()
-    recognizer = sr.Recognizer()
-
-    for i, mic_name in enumerate(mic_list):
-        try:
-            with sr.Microphone(device_index=i) as source:
-                recognizer.adjust_for_ambient_noise(source, duration=0.5)
-                print(f"Micrófono válido encontrado: {mic_name} (index {i})")
-                return i
-        except Exception:
-            pass
-    print("No se encontró micrófono válido.")
-    return None
+from pydub import AudioSegment
+from pydub.playback import play
 
 async def speak(answer):
+    """Genera el audio TTS y lo guarda en message.mp3. También lo reproduce"""
     tts = edge_tts.Communicate(text=answer, voice="es-MX-DaliaNeural")
     await tts.save("message.mp3")
+    
+    audio = AudioSegment.from_mp3("message.mp3")
+    play(audio)
 
-    pygame.mixer.init()
-    pygame.mixer.music.load("message.mp3")
-    pygame.mixer.music.play()
-
-    while pygame.mixer.music.get_busy():
-        pygame.time.wait(100)
-
-    pygame.mixer.music.stop()
-    pygame.mixer.quit()
-
-def listen(device_index):
+def listen(device_index=None):
     recognizer = sr.Recognizer()
-
     with sr.Microphone(device_index=device_index) as source:
-        recognizer.adjust_for_ambient_noise(source, duration=2)
-        recognizer.pause_threshold = 1.0
-        print("Escuchando...")
-        audio = recognizer.listen(source, timeout=6, phrase_time_limit=2)
-    try:
-        text = recognizer.recognize_google(audio, language="es-MX")
-        print(f"Usted dijo: {text}")
-        return text
-    except sr.UnknownValueError:
-        asyncio.run(speak("No entendí"))
-        return None
-    except sr.RequestError as e:
-        print(f"Error al conectar con el servicio de reconocimiento de voz: {e}")
-        return None
-
-def main():
-    device_index = get_working_microphone()
-    if device_index is None:
-        print("No hay micrófono disponible.")
-        return
-
-    while True:
-        command = listen(device_index)
-        if command:
-            print(f"Comando reconocido: {command}")
-            asyncio.run(speak(f"Dijiste: {command}"))
-
-if __name__ == "__main__":
-    main()
+        print("Ajustando ruido ambiental, espera...")
+        recognizer.adjust_for_ambient_noise(source, duration=1)
+        print("Escuchando, habla ahora...")
+        try:
+            audio = recognizer.listen(source, timeout=15, phrase_time_limit=5)
+            print("Procesando...")
+            texto = recognizer.recognize_google(audio, language="es-ES")
+            return speak(texto)
+        except sr.WaitTimeoutError:
+            print("No se detectó voz a tiempo, intenta hablar más claro o rápido.")
+            speak("No llegué a capturar")
+            return None
+        except sr.UnknownValueError:
+            print("No se entendió lo que dijiste.")
+            speak("No entendí")
+            return None
+        except sr.RequestError as e:
+            print(f"Error con el servicio de reconocimiento: {e}")
+            return None
