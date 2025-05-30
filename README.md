@@ -8,4 +8,4 @@ Acá voy a dejar las tareas pendientes que tiene cada integrante:
 ## . Realizar la librería Sonido (Código y testeos)
 
 # Fran
-## . Realizar la librería Voz (Código y testeos)
+## . Realizar la librería Música (Código y testeos)
