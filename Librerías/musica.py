@@ -1,8 +1,9 @@
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 import time
-import webbrowser
-import escuchar_responder  # Asegurate que este módulo tenga funciones async bien llamadas
+import psutil
+import subprocess
+import escuchar_responder
 
 # Autenticación con Spotify
 sp = spotipy.Spotify(auth_manager=SpotifyOAuth(
@@ -15,22 +16,29 @@ sp = spotipy.Spotify(auth_manager=SpotifyOAuth(
 web_abierto = False
 device_id = None
 
+def spotify_esta_corriendo():
+    for proc in psutil.process_iter(['name']):
+        if proc.info['name'] and 'spotify' in proc.info['name'].lower():
+            return True
+    return False
+
+def abrir_spotify():
+    try:
+        subprocess.Popen(['spotify'])
+        print("Spotify se abrió.")
+    except Exception as e:
+        print(f"No se pudo abrir Spotify: {e}")
+
 def wait_conected_device(timeout=60):
-    global web_abierto
-    print("Esperando dispositivo activo (Spotify)...")
-
-    if not web_abierto:
-        chrome_path = "/usr/bin/google-chrome %s"
-        webbrowser.get(chrome_path).open("https://open.spotify.com/")
-        web_abierto = True
-
+    if not spotify_esta_corriendo():
+        abrir_spotify()
     for _ in range(timeout):
         devices = sp.devices()
-        if devices["devices"]:
-            print("¡Dispositivo encontrado!")
-            return devices["devices"][0]["id"]
+        for device in devices.get("devices", []):
+            if device.get("is_active"):
+                print(f"Dispositivo activo encontrado: {device['name']}")
+                return device["id"]
         time.sleep(1)
-
     raise Exception("No se detectó un dispositivo activo en el tiempo esperado.")
 
 def play(tipo, uri):
@@ -44,61 +52,67 @@ def play(tipo, uri):
         sp.start_playback(device_id=device_id, uris=[uri])
 
 def search_playlist():
+    pause()
     escuchar_responder.asyncio.run(escuchar_responder.speak("¿Qué playlist quiere reproducir?"))
-    playlist = escuchar_responder.listen()
-    results = sp.search(q=playlist, type="playlist", limit=1)
+    playlist_name = escuchar_responder.listen()
+    results = sp.search(q=playlist_name, type="playlist", limit=5)
     if results['playlists']['items']:
+        for playlist in results['playlists']['items']:
+            nombre = playlist.get('name') if playlist else None
+            if nombre and nombre.lower() == playlist_name.lower():
+                uri = playlist['uri']
+                play("playlist", uri)
+                return
+        
+        escuchar_responder.asyncio.run(escuchar_responder.speak("No estoy segura de que sea la playlist exacta, te reproduzco la mejor coincidencia."))
         uri = results['playlists']['items'][0]['uri']
         play("playlist", uri)
     else:
-        print("No se encontró la playlist.")
+        escuchar_responder.asyncio.run(escuchar_responder.speak("No se encontré la playlist."))
+
 
 def search_cancion():
+    pause()
     escuchar_responder.asyncio.run(escuchar_responder.speak("¿Qué canción quiere reproducir?"))
     song = escuchar_responder.listen()
-    results = sp.search(q=song, type="track", limit=1)
+    results = sp.search(q=song, type="track", limit=5)
     if results['tracks']['items']:
+        for track in results['tracks']['items']:
+            if track['name'].lower() == song.lower():
+                uri = track['uri']
+                play("track", uri)
+                escuchar_responder.asyncio.run(escuchar_responder.speak("No estoy segura de que sea la canción exacta, te reproduzco la mejor coincidencia."))
         uri = results['tracks']['items'][0]['uri']
         play("track", uri)
     else:
-        print("No se encontró la canción.")
+        escuchar_responder.asyncio.run(escuchar_responder.speak("No se encontré la canción."))
+
 
 def pause():
-    sp.pause_playback(device_id=device_id)
+    global device_id
+    if device_id is None:
+        try:
+            device_id = wait_conected_device()
+        except Exception as e:
+            print(f"No se puede pausar porque no hay dispositivo activo: {e}")
+            return
+    try:
+        sp.pause_playback(device_id=device_id)
+        print("Reproducción pausada.")
+    except Exception as e:
+        print(f"Error al pausar la reproducción: {e}")
 
 def resume():
-    sp.start_playback(device_id=device_id)
-
-# -------------------------------
-# MAIN DE PRUEBA
-# -------------------------------
-
-def main():
     global device_id
-    device_id = wait_conected_device()
+    if device_id is None:
+        try:
+            device_id = wait_conected_device()
+        except Exception as e:
+            print(f"No se puede reanudar porque no hay dispositivo activo: {e}")
+            return
+    try:
+        sp.start_playback(device_id=device_id)
+        print("Reproducción reanudada.")
+    except Exception as e:
+        print(f"Error al reanudar la reproducción: {e}")
 
-    while True:
-        print("\nOpciones:")
-        print("1. Reproducir playlist")
-        print("2. Reproducir canción")
-        print("3. Pausar")
-        print("4. Reanudar")
-        print("5. Salir")
-
-        opcion = escuchar_responder.listen()
-
-        if opcion == "reproducir playlist":
-            search_playlist()
-        elif opcion == "2":
-            search_cancion()
-        elif opcion == "3":
-            pause()
-        elif opcion == "4":
-            resume()
-        elif opcion == "5":
-            break
-        else:
-            print("Opción inválida.")
-
-if __name__ == "__main__":
-    main()
