@@ -21,7 +21,7 @@ def listen(device_index=None):
         print("Escuchando, habla ahora...")
         confirmationSound()
         try:
-            audio = recognizer.listen(source, timeout=10, phrase_time_limit=7)
+            audio = recognizer.listen(source, timeout=17, phrase_time_limit=15)
             print("Procesando...")
             texto = recognizer.recognize_google(audio, language="es-ES")
             texto=texto.lower()
