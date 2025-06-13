@@ -1,55 +1,93 @@
 from pydub.playback import play
 from pydub import AudioSegment
 import os
-volumeFactor=100
-lastVolume=0
+import escuchar_responder
+import asyncio
 
+# Volume state variables
+volumeFactor = 100
+lastVolume = 100  # Default to initial max volume
 
 def confirmationSound():
+    """Play confirmation sound safely"""
     confirm_volume()
-    audio=AudioSegment.from_mp3("f1.mp3")
-    play(audio)
+    file_path = os.path.abspath("f1.mp3")
+
+    if not os.path.exists(file_path):
+        print(f"Error: Archivo '{file_path}' no encontrado.")
+        return
+
+    try:
+        audio = AudioSegment.from_mp3(file_path)
+        play(audio)
+    except Exception as e:
+        print(f"Error al reproducir sonido: {e}")
 
 def volumeUp():
-    """sube el volumen en 5"""
+    """Increase volume by 5% (max 100%)"""
     global volumeFactor
-    volumeFactor+=5
+    volumeFactor = min(volumeFactor + 5, 100)
     confirm_volume()
-    
-def set_volume(newVolume):
-    global volumeFactor
-    volumeFactor=newVolume
-    confirm_volume()
-
-
 
 def volumeDown():
-    """baja el volumen en 5"""
+    """Decrease volume by 5% (min 0%)"""
     global volumeFactor
-    volumeFactor-=5
+    volumeFactor = max(volumeFactor - 5, 0)
     confirm_volume()
 
+def set_volume(newVolume):
+    """Set volume safely with validation"""
+    global volumeFactor
+    try:
+        newVolume = int(newVolume)
+        if 0 <= newVolume <= 100:
+            volumeFactor = newVolume
+        else:
+            print("Error: volumen fuera de rango (0-100).")
+    except ValueError:
+        print("Error: entrada no válida, ingrese un número.")
+    
+    confirm_volume()
 
 def confirm_volume():
+    """Apply volume level to system"""
     global volumeFactor
-    if(volumeFactor>100):
-        volumeFactor=100
-        print("nuh uh")
-    elif(volumeFactor<0):
-        print("nuh uh")
-        volumeFactor=0
-    os.system(f"pactl set-sink-volume @DEFAULT_SINK@ {volumeFactor}%")
-
+    try:
+        os.system(f"pactl set-sink-volume @DEFAULT_SINK@ {volumeFactor}%")
+    except Exception as e:
+        print(f"Error al ajustar el volumen: {e}")
 
 def mute():
-    global volumeFactor
-    global lastVolume
-    lastVolume=volumeFactor
-    volumeFactor=0
-    
+    """Mute sound, saving previous volume"""
+    global volumeFactor, lastVolume
+    lastVolume = volumeFactor
+    volumeFactor = 0
+    confirm_volume()
 
 def unmute():
+    """Restore volume if previously muted"""
     global volumeFactor
-    if volumeFactor==0:
-        volumeFactor=lastVolume
+    if volumeFactor == 0:
+        volumeFactor = lastVolume
+        confirm_volume()
+
+def menuSonido():
+    """Voice-controlled menu for sound settings"""
+    teto = escuchar_responder.listen()
+    if teto:
+        match teto:
+            case "subir volumen":
+                volumeUp()
+            case "bajar volumen":
+                volumeDown()
+            case "mutear":
+                mute()
+            case "desmutear":
+                unmute()
+            case "ajustar volumen":
+                asyncio.run(escuchar_responder.speak("¿Qué nivel de volumen? (0-100)"))
+                volumen = escuchar_responder.listen()
+                set_volume(volumen)
+            case _:
+                asyncio.run(escuchar_responder.speak("No se ha entendido la orden."))
 

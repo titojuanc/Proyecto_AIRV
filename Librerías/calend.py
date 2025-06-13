@@ -4,115 +4,151 @@ import os
 from pydub.playback import play
 from pydub import AudioSegment
 from datetime import datetime
+import escuchar_responder
+import asyncio
 
 def alarm():
-    audio=AudioSegment.from_mp3("listen.mp3")
-    play(audio)
-    sonido.set_volume(100)
-    
+    try:
+        audio = AudioSegment.from_mp3("listen.mp3")
+        play(audio)
+        sonido.set_volume(100)
+    except Exception as e:
+        print(f"Error al reproducir alarma: {e}")
+
 def setAlarm(dia, hora):
-    if(check_alarm(dia, hora)):
-        schedule.every().dia.at(hora).do(alarm())
-    else:
-        print("ya hay una alarma a esa hora ese dia de la semana")
+    try:
+        dia = int(dia)
+        hora = str(hora)
+        if check_alarm(dia, hora):
+            print(f"Ya hay una alarma a las {hora} el día {dia}.")
+        else:
+            schedule.every().day.at(hora).do(alarm)
+            print(f"Alarma establecida para el día {dia} a las {hora}.")
+    except ValueError:
+        print("Error: formato de día/hora inválido.")
 
 def check_alarm(day_of_week, hour):
+    """Verifica si ya existe una alarma en ese día y hora"""
     jobs = schedule.get_jobs()
     for job in jobs:
-        scheduled_day = job.unit
         scheduled_time = job.next_run.strftime("%H:%M")
-        if scheduled_day.lower() == day_of_week.lower() and scheduled_time == hour:
+        if scheduled_time == hour:
             return True
     return False
 
 def date():
-    fecha=datetime.today().strftime('%d%m%Y')
+    try:
+        fecha = datetime.today().strftime('%d%m%Y')
+        hoy_file = "hoy.txt"
+        filename = f"{fecha}.txt"
 
-    hoy=open("hoy.txt","w")
-    filename=f"{fecha}.txt"
-    if os.path.exists(filename):
-        fechas=open(filename,"r")
-        contenido=fechas.read()
-        hoy.write(contenido)
-        fecha.close
-        os.remove(filename)
-    hoy.close
-    
-        
+        with open(hoy_file, "w") as hoy:
+            if os.path.exists(filename):
+                with open(filename, "r") as fechas:
+                    contenido = fechas.read()
+                    hoy.write(contenido)
+                os.remove(filename)
+    except Exception as e:
+        print(f"Error al manejar archivos: {e}")
 
 def currentDate():
-    hoy = datetime.today().strftime('%d\%m\%Y')
-    return hoy
+    return datetime.today().strftime('%d%m%Y')
 
 def setTasks(fecha, tarea):
-    """Stores tasks with an index in the format: INDEX - TASK. Usar formato de fecha DDMMYYYY"""
+    """Guarda tareas con índice. Formato de fecha: DDMMYYYY"""
     try:
         fechaPasada = datetime.strptime(fecha, "%d%m%Y")
-    except ValueError:
-        print("Formato de fecha inválido. Use DDMMYYYY.")
-        return
-    
-    if fechaPasada > datetime.today():
+        if fechaPasada <= datetime.today():
+            print("No se puede ingresar una fecha anterior.")
+            return
+
         filename = f"{fechaPasada.strftime('%d%m%Y')}.txt"
 
-        # Read existing tasks to determine the next index
+        # Leer índices previos
         index = 1
         if os.path.exists(filename):
             with open(filename, "r") as file:
                 lines = file.readlines()
                 if lines:
-                    last_index = int(lines[-1].split(" - ")[0])  # Extract last index
+                    last_index = int(lines[-1].split(" - ")[0])
                     index = last_index + 1
 
-        # Append the task with the new index
+        # Escribir tarea con índice
         with open(filename, "a") as fechaTarea:
             fechaTarea.write(f"{index} - {tarea}\n")
         
         print(f"Tarea agregada para el día {fecha}: [{index}] {tarea}")
-    else:
-        print("No se puede ingresar una fecha anterior.")
-
-
+    except ValueError:
+        print("Formato de fecha inválido. Use DDMMYYYY.")
+    except Exception as e:
+        print(f"Error al manejar la tarea: {e}")
 
 def deleteTask(fecha, index):
-    """Deletes a task from the list using the given index."""
-    filename = f"{fecha}.txt"
+    """Elimina una tarea específica."""
+    try:
+        filename = f"{fecha}.txt"
+        if not os.path.exists(filename):
+            print("No hay tareas para esta fecha.")
+            return
 
-    if not os.path.exists(filename):
-        print("No hay tareas para esta fecha.")
-        return
-    
-    # Read current tasks
-    with open(filename, "r") as file:
-        tasks = file.readlines()
-    
-    # Remove task by index
-    updated_tasks = [task for task in tasks if not task.startswith(f"{index} - ")]
+        with open(filename, "r") as file:
+            tasks = file.readlines()
 
-    if len(tasks) == len(updated_tasks):
-        print(f"No se encontró una tarea con el índice {index}.")
-        return
-    
-    # Rewrite the file with updated tasks and re-index them
-    with open(filename, "w") as file:
-        for i, task in enumerate(updated_tasks, start=1):
-            file.write(f"{i} - {task.split(' - ', 1)[1]}")  # Update index
-    
-    print(f"Tarea con índice {index} eliminada de la fecha {fecha}.")
+        updated_tasks = [task for task in tasks if not task.startswith(f"{index} - ")]
 
+        if len(tasks) == len(updated_tasks):
+            print(f"No se encontró una tarea con el índice {index}.")
+            return
 
+        with open(filename, "w") as file:
+            for i, task in enumerate(updated_tasks, start=1):
+                file.write(f"{i} - {task.split(' - ', 1)[1]}")  # Reindexando
 
+        print(f"Tarea con índice {index} eliminada de la fecha {fecha}.")
+    except Exception as e:
+        print(f"Error al eliminar tarea: {e}")
 
 def todayTasks():
-    hoy=open("hoy.txt","r")
-    tareas=[]
-    contenido=hoy.read()
-    for i in contenido:
-        if i=="\n":
-            tareas.append(tarea)
-        else:
-            tarea+=i
-            
-    return tareas
-    
-deleteTask("07062025", 1)
+    """Obtiene tareas del día desde 'hoy.txt'"""
+    try:
+        with open("hoy.txt", "r") as hoy:
+            tareas = hoy.readlines()
+            return [t.strip() for t in tareas]
+    except FileNotFoundError:
+        print("No hay tareas registradas para hoy.")
+        return []
+    except Exception as e:
+        print(f"Error al leer tareas: {e}")
+        return []
+
+def menuCalendario():
+    teto = escuchar_responder.listen()
+    if teto:
+        match teto:
+            case "poner alarma":
+                asyncio.run(escuchar_responder.speak("¿Qué día?"))
+                dia = escuchar_responder.listen()
+                asyncio.run(escuchar_responder.speak("¿Qué hora?"))
+                hora = escuchar_responder.listen()
+                setAlarm(dia, hora)
+            case "añadir tarea":
+                asyncio.run(escuchar_responder.speak("¿Qué fecha? Usar formato DDMMYYYY"))
+                fecha = escuchar_responder.listen()
+                asyncio.run(escuchar_responder.speak("¿Cuál es la tarea?"))
+                tarea = escuchar_responder.listen()
+                setTasks(fecha, tarea)
+            case "recordame las tareas de hoy":
+                tareas = todayTasks()
+                if tareas:
+                    for tarea in tareas:
+                        asyncio.run(escuchar_responder.speak(tarea))
+                else:
+                    asyncio.run(escuchar_responder.speak("No hay tareas para hoy."))
+            case "quitar tarea":
+                asyncio.run(escuchar_responder.speak("¿Qué fecha? Usar formato DDMMYYYY"))
+                fecha = escuchar_responder.listen()
+                asyncio.run(escuchar_responder.speak("¿Cuál es el número de tarea?"))
+                indice = escuchar_responder.listen()
+                deleteTask(fecha, indice)
+            case _:
+                asyncio.run(escuchar_responder.speak("No se ha entendido la orden."))
