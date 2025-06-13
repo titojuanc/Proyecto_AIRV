@@ -3,7 +3,7 @@ import edge_tts
 from pydub import AudioSegment
 from pydub.playback import play
 import asyncio
-from sonido import confirmationSound
+import sonido
 
 async def speak(answer):
     """Genera el audio TTS y lo guarda en message.mp3. También lo reproduce usar asyncio.run(speak(param))"""
@@ -19,7 +19,7 @@ def listen(device_index=None):
         print("Ajustando ruido ambiental, espera...")
         recognizer.adjust_for_ambient_noise(source, duration=1)
         print("Escuchando, habla ahora...")
-        confirmationSound()
+        sonido.confirmationSound()
         try:
             audio = recognizer.listen(source, timeout=17, phrase_time_limit=15)
             print("Procesando...")
