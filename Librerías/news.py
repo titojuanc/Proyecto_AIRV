@@ -18,5 +18,3 @@ def fiveFirstHeaders():
             asyncio.run(speak(headline.text.strip()+":\n" + (description.text.strip() if description else "No description found.") + "\n"))
     else:
         print(f"Failed to fetch page, status code: {response.status_code}")
-
-fiveFirstHeaders()

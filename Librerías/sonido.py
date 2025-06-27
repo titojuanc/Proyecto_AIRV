@@ -1,8 +1,6 @@
 from pydub.playback import play
 from pydub import AudioSegment
 import os
-import escuchar_responder
-import asyncio
 
 # Volume state variables
 volumeFactor = 100
@@ -11,7 +9,8 @@ lastVolume = 100  # Default to initial max volume
 def confirmationSound():
     """Play confirmation sound safely"""
     confirm_volume()
-    file_path = os.path.abspath("f1.mp3")
+    folderPath="audio"
+    file_path = os.path.join(folderPath, "f1.mp3")
 
     if not os.path.exists(file_path):
         print(f"Error: Archivo '{file_path}' no encontrado.")
@@ -71,23 +70,4 @@ def unmute():
         volumeFactor = lastVolume
         confirm_volume()
 
-def menuSonido():
-    """Voice-controlled menu for sound settings"""
-    teto = escuchar_responder.listen()
-    if teto:
-        match teto:
-            case "subir volumen":
-                volumeUp()
-            case "bajar volumen":
-                volumeDown()
-            case "mutear":
-                mute()
-            case "desmutear":
-                unmute()
-            case "ajustar volumen":
-                asyncio.run(escuchar_responder.speak("¿Qué nivel de volumen? (0-100)"))
-                volumen = escuchar_responder.listen()
-                set_volume(volumen)
-            case _:
-                asyncio.run(escuchar_responder.speak("No se ha entendido la orden."))
 
