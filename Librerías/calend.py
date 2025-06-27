@@ -7,6 +7,22 @@ from datetime import datetime
 import escuchar_responder
 import asyncio
 
+ALARM_FILE="alarms.txt"
+
+def formatear_hora(hora):
+    try:
+        hora = str(int(hora)).zfill(4)  # Asegura que sea numérico y de 4 dígitos
+        hh = int(hora[:2])
+        mm = int(hora[2:])
+
+        # Validar que esté en rango válido
+        if 0 <= hh <= 23 and 0 <= mm <= 59:
+            return f"{hh:02d}:{mm:02d}"
+        else:
+            return None
+    except:
+        return None
+
 def alarm():
     try:
         audio = AudioSegment.from_mp3("listen.mp3")
@@ -18,22 +34,29 @@ def alarm():
 def setAlarm(dia, hora):
     try:
         dia = int(dia)
-        hora = str(hora)
-        if check_alarm(dia, hora):
-            print(f"Ya hay una alarma a las {hora} el día {dia}.")
-        else:
-            schedule.every().day.at(hora).do(alarm)
-            print(f"Alarma establecida para el día {dia} a las {hora}.")
-    except ValueError:
-        print("Error: formato de día/hora inválido.")
+        formHora = formatear_hora(hora)
+        if not formHora:
+            print("Error: hora inválida. Usá formato HHMM válido.")
+            return
 
-def check_alarm(day_of_week, hour):
-    """Verifica si ya existe una alarma en ese día y hora"""
-    jobs = schedule.get_jobs()
-    for job in jobs:
-        scheduled_time = job.next_run.strftime("%H:%M")
-        if scheduled_time == hour:
-            return True
+        if check_alarm(dia, formHora):
+            print(f"Ya hay una alarma a las {formHora} el día {dia}.")
+            return
+
+        with open(ALARM_FILE, "a") as f:
+            f.write(f"{dia},{formHora}\n")
+        print(f"Alarma guardada para el día {dia} a las {formHora}.")
+    except ValueError:
+        print("Error: formato de día inválido.")
+
+def check_alarm(dia, hora):
+    if not os.path.exists(ALARM_FILE):
+        return False
+    with open(ALARM_FILE, "r") as f:
+        for line in f:
+            d, h = line.strip().split(",")
+            if str(d) == str(dia) and h == hora:
+                return True
     return False
 
 def date():
@@ -122,33 +145,38 @@ def todayTasks():
         return []
 
 def menuCalendario():
-    teto = escuchar_responder.listen()
-    if teto:
-        match teto:
-            case "poner alarma":
-                asyncio.run(escuchar_responder.speak("¿Qué día?"))
-                dia = escuchar_responder.listen()
-                asyncio.run(escuchar_responder.speak("¿Qué hora?"))
-                hora = escuchar_responder.listen()
-                setAlarm(dia, hora)
-            case "añadir tarea":
-                asyncio.run(escuchar_responder.speak("¿Qué fecha? Usar formato DDMMYYYY"))
-                fecha = escuchar_responder.listen()
-                asyncio.run(escuchar_responder.speak("¿Cuál es la tarea?"))
-                tarea = escuchar_responder.listen()
-                setTasks(fecha, tarea)
-            case "recordame las tareas de hoy":
-                tareas = todayTasks()
-                if tareas:
-                    for tarea in tareas:
-                        asyncio.run(escuchar_responder.speak(tarea))
-                else:
-                    asyncio.run(escuchar_responder.speak("No hay tareas para hoy."))
-            case "quitar tarea":
-                asyncio.run(escuchar_responder.speak("¿Qué fecha? Usar formato DDMMYYYY"))
-                fecha = escuchar_responder.listen()
-                asyncio.run(escuchar_responder.speak("¿Cuál es el número de tarea?"))
-                indice = escuchar_responder.listen()
-                deleteTask(fecha, indice)
-            case _:
-                asyncio.run(escuchar_responder.speak("No se ha entendido la orden."))
+    while True:
+        teto = escuchar_responder.listen()
+        if teto:
+            match teto:
+                case "poner alarma":
+                    asyncio.run(escuchar_responder.speak("¿Qué día?"))
+                    dia = escuchar_responder.listen()
+                    asyncio.run(escuchar_responder.speak("¿Qué hora?"))
+                    hora = escuchar_responder.listen()
+                    setAlarm(dia, hora)
+                case "añadir tarea":
+                    asyncio.run(escuchar_responder.speak("¿Qué fecha? Usar formato DDMMYYYY"))
+                    fecha = escuchar_responder.listen()
+                    asyncio.run(escuchar_responder.speak("¿Cuál es la tarea?"))
+                    tarea = escuchar_responder.listen()
+                    setTasks(fecha, tarea)
+                case "recordame las tareas de hoy":
+                    tareas = todayTasks()
+                    if tareas:
+                        for tarea in tareas:
+                            asyncio.run(escuchar_responder.speak(tarea))
+                    else:
+                        asyncio.run(escuchar_responder.speak("No hay tareas para hoy."))
+                case "quitar tarea":
+                    asyncio.run(escuchar_responder.speak("¿Qué fecha? Usar formato DDMMYYYY"))
+                    fecha = escuchar_responder.listen()
+                    asyncio.run(escuchar_responder.speak("¿Cuál es el número de tarea?"))
+                    indice = escuchar_responder.listen()
+                    deleteTask(fecha, indice)
+                case "salir":
+                    break
+                case _:
+                    asyncio.run(escuchar_responder.speak("No se ha entendido la orden."))
+
+menuCalendario()
