@@ -1,21 +1,18 @@
-import bluetooth
+from bleak import BleakScanner, BleakClient
 import asyncio
 import escuchar_responder
 
-def connect_bt():
-    nearby_devices = bluetooth.discover_devices(duration=8, lookup_names=True)
-    i=0
+async def scan():
+    devices = await BleakScanner.discover()
     addresses=[]
-    asyncio.run(escuchar_responder.speak("Dispositivos encontrados:"))
-    for addr, name in range(10):
-        if not addr and not name:
-            break
-        else:
-            i=i+1
-            addresses.append(addr)
-            asyncio.run(escuchar_responder.speak(f"Opción{1}: {name}"))
-
-    opcion=escuchar_responder.listen()
+    i=0
+    for d in devices:
+        
+        print(f"Name: {d.name}, Address: {d.address}")
+        i=i+1
+        addresses.append(d.address)
+        asyncio.run(escuchar_responder.speak(f"Opción{i}: {d.name}"))
+        opcion=escuchar_responder.listen()
     match opcion:
         case "opción uno":
             device_adress= addresses[0]
@@ -30,12 +27,9 @@ def connect_bt():
         case _:
             asyncio.run(escuchar_responder.speak(f"No entendí"))
 
-
-
-    sock = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
-    sock.connect((device_address, 1))  # Port 1 is commonly used
-
-    print(f"Connected to {device_address}")
-    sock.send("Hello, Bluetooth!")  # Send data
-    sock.close()
-
+    asyncio.run(connect(device_adress))
+async def connect(address):
+    async with BleakClient(address) as client:
+        if await client.is_connected():
+            print(f"Connected to {address}")
+asyncio.run(scan())
