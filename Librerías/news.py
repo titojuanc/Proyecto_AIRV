@@ -1,5 +1,4 @@
 import requests
-import escuchar_responder
 from escuchar_responder import speak
 from bs4 import BeautifulSoup
 import asyncio
@@ -18,3 +17,5 @@ def fiveFirstHeaders():
             asyncio.run(speak(headline.text.strip()+":\n" + (description.text.strip() if description else "No description found.") + "\n"))
     else:
         print(f"Failed to fetch page, status code: {response.status_code}")
+
+fiveFirstHeaders()

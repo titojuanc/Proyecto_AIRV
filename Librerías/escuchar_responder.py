@@ -9,7 +9,7 @@ import os
 async def speak(answer):
     """Genera el audio TTS y lo guarda en Ejemplos/message.mp3. También lo reproduce."""
     
-    folder_path = "Ejemplos"
+    folder_path = "audio"
     os.makedirs(folder_path, exist_ok=True)
 
     file_path = os.path.join(folder_path, "message.mp3")
@@ -45,6 +45,3 @@ def listen(device_index=None):
         except sr.RequestError as e:
             print(f"Error con el servicio de reconocimiento: {e}")
             return None
-
-opcion=listen()
-asyncio.run(speak(opcion))
