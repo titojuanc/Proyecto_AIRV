@@ -63,21 +63,14 @@ def alarm():
     except Exception as e:
         print(f"Error al reproducir alarma: {e}")
 
-def setAlarm(dia, hora):
+def setAlarm(diaa, formHora):
     try:
-        dia = int(dia)
-        formHora = formatear_hora(hora)
-        if not formHora:
-            print("Error: hora inválida. Usá formato HHMM válido.")
-            return
-
-        if check_alarm(dia, formHora):
-            print(f"Ya hay una alarma a las {formHora} el día {dia}.")
-            return
+        
 
         with open(ALARM_FILE, "a") as f:
-            f.write(f"{dia},{formHora}\n")
-        print(f"Alarma guardada para el día {dia} a las {formHora}.")
+            f.write(f"{diaa},{formHora}\n")
+        print(f"Alarma guardada para el día {diaa} a las {formHora}.")
+        asyncio.run(escuchar_responder.speak("Alarma guardada."))
     except ValueError:
         print("Error: formato de día inválido.")
 
@@ -109,64 +102,39 @@ def date():
 def currentDate():
     return datetime.today().strftime('%d%m%Y')
 
-def setTasks(fecha, tarea):
+def setTasks(fechaPasada, tarea):
     """Guarda tareas con índice. Formato de fecha: DDMMYYYY"""
-    fech=limpiar_fecha_voz(fecha)
-    try:
-        fechaPasada = datetime.strptime(fech, "%d%m%Y")
-        if fechaPasada <= datetime.today():
-            print("No se puede ingresar una fecha anterior.")
-            return
 
-        filename = f"{fechaPasada.strftime('%d%m%Y')}.txt"
+    filename = f"{fechaPasada.strftime('%d%m%Y')}.txt"
 
         # Leer índices previos
-        index = 1
-        if os.path.exists(filename):
-            with open(filename, "r") as file:
-                lines = file.readlines()
-                if lines:
-                    last_index = int(lines[-1].split(" - ")[0])
-                    index = last_index + 1
-
-        # Escribir tarea con índice
-        with open(filename, "a") as fechaTarea:
-            fechaTarea.write(f"{index} - {tarea}\n")
-        
-        print(f"Tarea agregada para el día {fecha}: [{index}] {tarea}")
-    except ValueError:
-        print("Formato de fecha inválido. Use DDMMYYYY.")
-    except Exception as e:
-        print(f"Error al manejar la tarea: {e}")
-
-def deleteTask(fecha, index):
-    """Elimina una tarea específica."""
-    print ("INDICE "+ str(index))
-    inde=convertir_a_numero(index)
-    print ("INDEX" + str(inde))
-    fech=limpiar_fecha_voz(fecha)
-    try:
-        filename = f"{fech}.txt"
-        if not os.path.exists(filename):
-            print("No hay tareas para esta fecha.")
-            return
-
+    index = 1
+    if os.path.exists(filename):
         with open(filename, "r") as file:
-            tasks = file.readlines()
+            lines = file.readlines()
+            if lines:
+                last_index = int(lines[-1].split(" - ")[0])
+                index = last_index + 1
+        
+    # Escribir tarea con índice
+    with open(filename, "a") as fechaTarea:
+        fechaTarea.write(f"{index} - {tarea}\n")
+        
 
-        updated_tasks = [task for task in tasks if not task.startswith(f"{inde} - ")]
+def deleteTask(fecha, index, updated_tasks):
+    """Elimina una tarea específica."""
+    
+    fechaPasada = datetime.strptime(fecha, "%d%m%Y")
+    if fechaPasada<=datetime.today():
+        return
 
-        if len(tasks) == len(updated_tasks):
-            print(f"No se encontró una tarea con el índice {inde}.")
-            return
+    filename = f"{fecha}.txt"
 
-        with open(filename, "w") as file:
-            for i, task in enumerate(updated_tasks, start=1):
-                file.write(f"{i} - {task.split(' - ', 1)[1]}")  # Reindexando
+    with open(filename, "w") as file:
+        for i, task in enumerate(updated_tasks, start=1):
+            file.write(f"{i} - {task.split(' - ', 1)[1]}")  # Reindexando
 
-        print(f"Tarea con índice {index} eliminada de la fecha {fech}.")
-    except Exception as e:
-        print(f"Error al eliminar tarea: {e}")
+    print(f"Tarea con índice {index} eliminada de la fecha {fecha}.")
 
 def todayTasks():
     """Obtiene tareas del día desde 'hoy.txt'"""
@@ -187,17 +155,76 @@ def menuCalendario():
         if teto:
             match teto:
                 case "poner alarma":
-                    asyncio.run(escuchar_responder.speak("¿Qué día?"))
-                    dia = escuchar_responder.listen()
-                    asyncio.run(escuchar_responder.speak("¿Qué hora?"))
-                    hora = escuchar_responder.listen()
-                    setAlarm(dia, hora)
+                    #checkeo dia
+                    diaerr=True
+                    while diaerr:
+                        asyncio.run(escuchar_responder.speak("¿Qué día?"))
+                        dia = escuchar_responder.listen()
+                        if dia=="salir":
+                            break
+                        diaa = limpiar_fecha_voz(str(dia))
+                        diaaa=datetime.strptime(diaa, "%d%m%Y")
+                        if diaa and diaaa>=datetime.today():
+                            diaerr=False
+                            horaerr=True
+                            while horaerr:
+                                #checkeo hora
+                                asyncio.run(escuchar_responder.speak("¿Qué hora?"))
+                                hora = escuchar_responder.listen()
+
+                                if hora=="salir":
+                                    break
+
+                                formHora = formatear_hora(hora)
+
+                                if formHora:
+                                    horaerr=False
+                                    if check_alarm(diaa, formHora): #checkeo si ya existe la alarma
+                                        asyncio.run(escuchar_responder.speak(f"Ya hay una alarma a las {formHora} el día {diaa}."))
+
+                                    else:
+                                        setAlarm(diaa, formHora) #pongo la alarma 
+                                
+                                else:
+                                    asyncio.run(escuchar_responder.speak("Error: hora inválida. Usar formato HHMM válido. Digalo de nuevo por favor"))
+                        else:
+                            asyncio.run(escuchar_responder.speak("Formato de dia inválido. Digalo de nuevo por favor."))
+
                 case "añadir tarea":
-                    asyncio.run(escuchar_responder.speak("¿Qué fecha? Usar formato DDMMYYYY"))
-                    fecha = escuchar_responder.listen()
-                    asyncio.run(escuchar_responder.speak("¿Cuál es la tarea?"))
-                    tarea = escuchar_responder.listen()
-                    setTasks(fecha, tarea)
+
+                    diaerr=True
+                    while diaerr:
+                        asyncio.run(escuchar_responder.speak("¿Qué fecha?"))
+                        fecha = escuchar_responder.listen()
+
+                        #checkeo para salir del loop
+                        if fecha=="salir":
+                            break
+
+                        fech=limpiar_fecha_voz(fecha)
+                        fechaPasada = datetime.strptime(fech, "%d%m%Y")
+
+                        #checkeo que dia este bien y que no se anterior a hoy
+                        if fechaPasada and fechaPasada >= datetime.today():
+                            diaerr=False
+                            horaerr=True
+                            while horaerr:
+                                asyncio.run(escuchar_responder.speak("¿Cuál es la tarea?"))
+                                tarea = escuchar_responder.listen()
+
+                                if tarea=="salir":
+                                    break
+
+                                if tarea:
+                                    setTasks(fechaPasada, tarea)
+                                    horaerr=False
+                                else:
+                                    asyncio.run(escuchar_responder.speak("Error, no puede no haber tarea."))
+                                    
+                        else:
+                            asyncio.run(escuchar_responder.speak("Error de formato de fecha o fecha anterior a hoy"))
+
+
                 case "recordame las tareas de hoy":
                     tareas = todayTasks()
                     if tareas:
@@ -205,14 +232,63 @@ def menuCalendario():
                             asyncio.run(escuchar_responder.speak(tarea))
                     else:
                         asyncio.run(escuchar_responder.speak("No hay tareas para hoy."))
+
                 case "quitar tarea":
-                    asyncio.run(escuchar_responder.speak("¿Qué fecha? Usar formato DDMMYYYY"))
-                    fecha = escuchar_responder.listen()
-                    asyncio.run(escuchar_responder.speak("¿Cuál es el número de tarea?"))
-                    indice = escuchar_responder.listen()
-                    deleteTask(fecha, indice)
+                    diaerr=True
+                    while diaerr:
+                        asyncio.run(escuchar_responder.speak("¿Qué fecha?"))
+                        fecha = escuchar_responder.listen()
+
+                        if fecha=="salir":
+                            break
+
+                        fech=limpiar_fecha_voz(fecha)
+                        filename = f"{fech}.txt"
+                            
+                        if fech and os.path.exists(filename):
+                            diaerr=False
+                            indexerr=True
+                            while indexerr:
+                                asyncio.run(escuchar_responder.speak("¿Cuál es el número de tarea?"))
+                                index = escuchar_responder.listen()
+
+                                if index=="salir":
+                                    break
+
+                                print ("INDICE "+ str(index))
+
+                                
+                                
+                                if index:
+                                    inde=convertir_a_numero(index)
+                                    print ("INDICE "+ str(inde))
+                                    if inde:
+                                        with open(filename, "r") as file:
+                                            tasks = file.readlines()
+
+                                        updated_tasks = [task for task in tasks if not task.startswith(f"{inde} - ")]
+                                        if len(tasks) != len(updated_tasks):
+                                            deleteTask(fech, inde, updated_tasks)
+                                            indexerr=False
+                                        else:
+                                            asyncio.run(escuchar_responder.speak("Error, no existe tarea con ese indice."))
+
+                                    else:
+                                        asyncio.run(escuchar_responder.speak("Error, intente de nuevo."))
+                                else:
+                                    asyncio.run(escuchar_responder.speak("Error, indice inválido o no hay tareas para ese dia."))
+
+                        else:
+                            asyncio.run(escuchar_responder.speak("Error de formato de fecha o fecha anterior a hoy"))
+                    
                 case "salir":
                     break
+                case "ayuda":
+                    asyncio.run(escuchar_responder.speak("Los comandos son: poner alarma, añadir tarea, recordame las tareas de hoy, quitar tarea, salir."))
+                    asyncio.run(escuchar_responder.speak("Especificaciones:"))
+                    asyncio.run(escuchar_responder.speak("Poner alarma: usar formato DDMMYYYY para el dia y usar formato HHMM para la hora y minutos. Decir numeros uno por uno."))
+                    asyncio.run(escuchar_responder.speak("Añadir tarea: usar formato DDMMYYYY para el dia y decir numeros uno por uno."))
+                    asyncio.run(escuchar_responder.speak("Quitar tarea: "))
                 case _:
                     asyncio.run(escuchar_responder.speak("No se ha entendido la orden."))
 
