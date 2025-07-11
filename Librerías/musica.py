@@ -4,6 +4,7 @@ import time
 import psutil
 import subprocess
 import escuchar_responder
+import asyncio
 
 # Autenticación con Spotify
 sp = spotipy.Spotify(auth_manager=SpotifyOAuth(
@@ -32,60 +33,134 @@ def abrir_spotify():
 def wait_conected_device(timeout=60):
     if not spotify_esta_corriendo():
         abrir_spotify()
-    for _ in range(timeout):
-        devices = sp.devices()
-        for device in devices.get("devices", []):
-            if device.get("is_active"):
-                print(f"Dispositivo activo encontrado: {device['name']}")
-                return device["id"]
+
+    for i in range(timeout):
+        devices = sp.devices().get("devices", [])
+        if devices:
+            device = devices[0]  # Elegimos el primero
+            device_id = device['id']
+            try:
+                sp.transfer_playback(device_id=device_id, force_play=False)
+                print(f"Dispositivo conectado: {device['name']}")
+                return device_id
+            except Exception as e:
+                print(f"No se pudo transferir la reproducción: {e}")
+        else:
+            print(f"Esperando dispositivo... ({i+1}/{timeout})")
         time.sleep(1)
-    raise Exception("No se detectó un dispositivo activo en el tiempo esperado.")
+
+    raise Exception("No se detectó un dispositivo en el tiempo esperado.")
+
+def activar_dispositivo_temporal():
+    global device_id
+    device_id = wait_conected_device()
+    # Reproduce algo corto para activar el dispositivo
+    sp.start_playback(device_id=device_id, context_uri="spotify:album:3Xiz5kq12VOzTw9Kun7m0f")
+    time.sleep(1)
+    sp.pause_playback(device_id=device_id)
+
+def search_album():
+    results, album_name = search("album")
+    if results['albums']['items']:
+        for album in results['albums']['items']:
+            nombre = album.get('name') if album else None
+            if nombre and nombre.lower() == album_name.lower():
+                uri = album['uri']
+                play("album", uri)
+                return
+        
+        escuchar_responder.asyncio.run(escuchar_responder.speak("No estoy segura de que sea el álbum exacto, te reproduzco la mejor coincidencia."))
+        uri = results['albums']['items'][0]['uri']
+        play("album", uri)
+    else:
+        escuchar_responder.asyncio.run(escuchar_responder.speak("No se encontró el álbum."))
+
 
 def play(tipo, uri):
     global device_id
     if device_id is None:
         device_id = wait_conected_device()
 
-    if tipo == 'playlist':
-        sp.start_playback(device_id=device_id, context_uri=uri)
-    elif tipo == 'track':
+    if tipo == 'track':
         sp.start_playback(device_id=device_id, uris=[uri])
-
-def search_playlist():
-    pause()
-    escuchar_responder.asyncio.run(escuchar_responder.speak("¿Qué playlist quiere reproducir?"))
-    playlist_name = escuchar_responder.listen()
-    results = sp.search(q=playlist_name, type="playlist", limit=5)
-    if results['playlists']['items']:
-        for playlist in results['playlists']['items']:
-            nombre = playlist.get('name') if playlist else None
-            if nombre and nombre.lower() == playlist_name.lower():
-                uri = playlist['uri']
-                play("playlist", uri)
-                return
-        
-        escuchar_responder.asyncio.run(escuchar_responder.speak("No estoy segura de que sea la playlist exacta, te reproduzco la mejor coincidencia."))
-        uri = results['playlists']['items'][0]['uri']
-        play("playlist", uri)
-    else:
-        escuchar_responder.asyncio.run(escuchar_responder.speak("No se encontré la playlist."))
-
+    elif tipo == 'album':
+        sp.start_playback(device_id=device_id, context_uri=uri)
 
 def search_cancion():
-    pause()
-    escuchar_responder.asyncio.run(escuchar_responder.speak("¿Qué canción quiere reproducir?"))
-    song = escuchar_responder.listen()
-    results = sp.search(q=song, type="track", limit=5)
-    if results['tracks']['items']:
+    results, song = search("track")
+    if results and 'tracks' in results and results['tracks']['items']:
         for track in results['tracks']['items']:
             if track['name'].lower() == song.lower():
                 uri = track['uri']
                 play("track", uri)
                 escuchar_responder.asyncio.run(escuchar_responder.speak("No estoy segura de que sea la canción exacta, te reproduzco la mejor coincidencia."))
+                return
         uri = results['tracks']['items'][0]['uri']
         play("track", uri)
     else:
-        escuchar_responder.asyncio.run(escuchar_responder.speak("No se encontré la canción."))
+        escuchar_responder.asyncio.run(escuchar_responder.speak("No se encontró la canción."))
+
+def search(tipo):
+    pause()
+    escuchar_responder.asyncio.run(escuchar_responder.speak(f"¿Qué {tipo} quiere reproducir?"))
+    query = escuchar_responder.listen()
+
+    if tipo == "album":
+        search_type = "album"
+    else:
+        search_type = "track"
+    
+    results = sp.search(q=query, type=search_type, limit=5)
+    return results, query
+
+
+def next():
+    global device_id
+    if device_id is None:
+        try:
+            device_id = wait_conected_device()
+        except Exception as e:
+            print(f"No se puede pasar a la siguiente porque no hay dispositivo activo: {e}")
+            return
+
+    try:
+        playback = sp.current_playback()
+        if not playback or not playback.get('is_playing'):
+            print("No hay nada reproduciéndose, no se puede avanzar.")
+            resume()
+            
+            
+
+        sp.next_track()
+        print("Pasando a la siguiente canción.")
+        time.sleep(2)  
+    except Exception as e:
+        print(f"Error al pasar a la siguiente canción: {e}")
+
+
+
+def previous():
+    global device_id
+    if device_id is None:
+        try:
+            device_id = wait_conected_device()
+        except Exception as e:
+            print(f"No se puede retroceder porque no hay dispositivo activo: {e}")
+            return
+
+    try:
+        playback = sp.current_playback()
+        if not playback or not playback.get('is_playing'):
+            print("No hay nada reproduciéndose, no se puede retroceder.")
+            resume()
+            
+
+        sp.previous_track()
+        print("Volviendo a la canción anterior.")
+        time.sleep(2)
+    except Exception as e:
+        print(f"Error al volver a la canción anterior: {e}")
+
 
 
 def pause():
@@ -97,10 +172,15 @@ def pause():
             print(f"No se puede pausar porque no hay dispositivo activo: {e}")
             return
     try:
+        playback = sp.current_playback()
+        if playback is None or not playback.get('is_playing'):
+            print("No hay reproducción activa, no puedo pausar.")
+            return
         sp.pause_playback(device_id=device_id)
         print("Reproducción pausada.")
     except Exception as e:
         print(f"Error al pausar la reproducción: {e}")
+
 
 def resume():
     global device_id
@@ -116,3 +196,48 @@ def resume():
     except Exception as e:
         print(f"Error al reanudar la reproducción: {e}")
 
+def main():
+    asyncio.run(escuchar_responder.speak("Bienvenido a Spotify. Diga 'ayuda' para conocer los comandos. Reproducir random para empezar"))
+    activar_dispositivo_temporal()
+    while True:
+        asyncio.run(escuchar_responder.speak("Home"))
+        comando = escuchar_responder.listen()
+        if not comando:
+            continue
+
+        comando = comando.lower()
+
+        if "salir" in comando or "terminar" in comando or "cerrar" in comando:
+            asyncio.run(escuchar_responder.speak("Adiós, cerrando Spotify."))
+            break
+
+        elif "siguiente" in comando or "pasar canción" in comando or "próxima" in comando:
+            next()
+            asyncio.run(escuchar_responder.speak("Pasando a la siguiente canción."))
+
+        elif "anterior" in comando or "volver canción" in comando or "canción anterior" in comando:
+            previous()
+            asyncio.run(escuchar_responder.speak("Volviendo a la canción anterior."))
+
+        elif "pausar" in comando or "detener" in comando:
+            pause()
+
+        elif "reanudar" in comando or "continuar" in comando:
+            resume()
+
+        elif "álbum" in comando or "album" in comando:
+            search_album()
+
+        elif "canción" in comando or "cancion" in comando:
+            search_cancion()
+
+        elif "ayuda" in comando:
+            texto_ayuda = ("Puedes decir: siguiente, anterior, pausar, reanudar, "
+                           "buscar canción, buscar álbum, o salir para terminar.")
+            asyncio.run(escuchar_responder.speak(texto_ayuda))
+
+        else:
+            asyncio.run(escuchar_responder.speak("No entendí el comando, por favor repite."))
+
+
+main()

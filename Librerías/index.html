@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Control desde Web</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding-top: 50px;
+    }
+    button {
+      padding: 15px 30px;
+      font-size: 18px;
+      margin: 10px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>Panel de Control</h1>
+
+  <button onclick="enviarAccion('noticias')">📰 Noticias</button>
+  <button onclick="enviarAccion('whatsapp')">💬 WhatsApp</button>
+  <button onclick="enviarAccion('microfono')">🎙️ Micrófono</button>
+  <button onclick="spotify()">🎵 Spotify</button>
+  <button onclick="enviarAccion('parlante')">🔊 Parlante</button>
+
+  <p id="estado"></p>
+
+  <script>
+    function enviarAccion(accion) {
+      fetch('http://localhost:5000/accion', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ accion: accion })
+      })
+      .then(response => response.json())
+      .then(data => {
+        document.getElementById("estado").innerText = "Acción enviada: " + data.accion_recibida;
+        console.log(data);
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        document.getElementById("estado").innerText = "Error al enviar acción.";
+      });
+    }
+
+    function spotify() {
+      // Redirige a la página de Spotify
+      window.location.href = "spotify.html";
+    }
+  </script>
+</body>
+</html>
