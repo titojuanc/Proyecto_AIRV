@@ -3,6 +3,7 @@ import mensajeria
 import news
 import menuSonido
 import calend
+import blutu
 
 # Debería quedar guardado en una memoria (archivos de texto), 
 # al entrar por primera vez al sistema debería estar en False,
@@ -38,7 +39,7 @@ def hearing():
                 case "bluetooth":
                     blutu.main() # PENDIENTE
                 case "configurción":
-                    initial_config(False) # PENDIENTE    
+                    initial_config(True) # PENDIENTE    
                 case "apagar":
                     exit(1) # y algún sonidito de apagado
                 case _:

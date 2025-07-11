@@ -6,13 +6,19 @@ async def scan():
     devices = await BleakScanner.discover()
     addresses=[]
     i=0
+    client=none
     for d in devices:
         
-        print(f"Name: {d.name}, Address: {d.address}")
+       
         i=i+1
+        print(f"Opción{i}: Name: {d.name}, Address: {d.address}")
         addresses.append(d.address)
-        escuchar_responder.speak(f"Opción{i}: {d.name}")
-        opcion=escuchar_responder.listen()
+        """escuchar_responder.speak(f"Opción{i}: {d.name}")"""
+        
+        """opcion=escuchar_responder.listen()
+        if i==5:
+            break
+    
     match opcion:
         case "opción uno":
             device_adress= addresses[0]
@@ -27,10 +33,19 @@ async def scan():
         case _:
             escuchar_responder.speak(f"No entendí")
 
-    asyncio.run(connect(device_adress))
-    
+    asyncio.run(connect(device_adress))"""
+    respuesta=input("a que dispositivo desea conectarse?")
+    await connect(addresses[int(respuesta)-1])
 async def connect(address):
+    client=BleakClient(address)
+    await client.connect()
+    print(f"Connected to {address}")
+
+async def disconnect(address):
     async with BleakClient(address) as client:
-        if await client.is_connected():
-            print(f"Connected to {address}")
-asyncio.run(scan())
+        if client.connc:
+            escuchar_responder.speak("Desconectando")
+asyncio.run(connect("E0:08:71:24:51:D3"))
+"""asyncio.run(scan())"""
+while True:
+    print("me corro")
