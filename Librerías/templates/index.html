@@ -21,7 +21,7 @@
   <h1>Panel de Control</h1>
 
   <button onclick="enviarAccion('noticias')">📰 Noticias</button>
-  <button onclick="enviarAccion('whatsapp')">💬 WhatsApp</button>
+  <button onclick="whatsApp()">💬 WhatsApp</button>
   <button onclick="enviarAccion('microfono')">🎙️ Micrófono</button>
   <button onclick="spotify()">🎵 Spotify</button>
   <button onclick="enviarAccion('parlante')">🔊 Parlante</button>
@@ -51,6 +51,11 @@
     function spotify() {
       window.location.href = "/spotify";
     }
+
+    function whatsApp() {
+      window.location.href = "/mensajeria"
+    }
+
   </script>
 </body>
 </html>

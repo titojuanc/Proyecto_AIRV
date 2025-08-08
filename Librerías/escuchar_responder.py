@@ -45,3 +45,4 @@ def listen(device_index=None):
         except sr.RequestError as e:
             print(f"Error con el servicio de reconocimiento: {e}")
             return None
+
