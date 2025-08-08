@@ -240,4 +240,3 @@ def main():
             asyncio.run(escuchar_responder.speak("No entendí el comando, por favor repite."))
 
 
-main()

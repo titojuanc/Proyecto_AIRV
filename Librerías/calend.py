@@ -339,4 +339,3 @@ def menuCalendario():
                 case _:
                     asyncio.run(escuchar_responder.speak("No se ha entendido la orden."))
 
-menuCalendario()

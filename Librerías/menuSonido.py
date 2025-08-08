@@ -27,4 +27,3 @@ def menuSonido():
                 case _:
                     asyncio.run(escuchar_responder.speak("No se ha entendido la orden. Si precisa ayuda diga: Ayuda."))
 
-menuSonido()
