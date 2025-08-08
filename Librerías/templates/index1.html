@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Calendario Web</title>
+</head>
+<body>
+    <h1>Calendario Web</h1>
+    <ul>
+        <li><a onclick="add_task()"> Añadir tarea</a></li>
+        <li><a onclick="today_tasks()"> Ver tareas de hoy</a></li>
+        <li><a onclick="alarms()"> Poner alarma</a></li>
+        <li><a onclick="date_tasks()"> Ver tareas por fecha</a></li>
+    </ul>
+</body>
+<script>
+    function add_task(){
+        window.location.href="/add_task"
+    }
+    function today_tasks(){
+        window.location.href="/today_tasks"
+    }
+    function alarms(){
+        window.location.href="/set_alarm"
+    }
+    function date_tasks(){
+        window.location.href="/tasks/<fecha>"
+    }
+</script>
+</html>

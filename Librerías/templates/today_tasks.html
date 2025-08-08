@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Tareas de hoy</title>
+</head>
+<body>
+    <script>
+        function index1(){
+            window.location.href="/"
+        }
+    </script>
+    <h1> Tareas de hoy</h1>
+    {% if tasks %}
+        <ul>
+            {% for task in tasks %}
+                <li>{{ task }}</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No hay tareas para hoy.</p>
+    {% endif %}
+    <a onclick="index1()">⬅ Volver</a>
+</body>
+</html>

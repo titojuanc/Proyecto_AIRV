@@ -338,4 +338,3 @@ def menuCalendario():
                     asyncio.run(escuchar_responder.speak("Quitar tarea: usar formato DDMMYYYY para el dia."))
                 case _:
                     asyncio.run(escuchar_responder.speak("No se ha entendido la orden."))
-
