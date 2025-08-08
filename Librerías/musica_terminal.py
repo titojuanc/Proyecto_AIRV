@@ -78,21 +78,44 @@ def reproducir():
     global device_id
     if device_id is None:
         esperar_dispositivo()
-    sp.start_playback(device_id=device_id)
+    try:
+        sp.start_playback(device_id=device_id)
+        return True
+    except Exception as e:
+        print(f"[ERROR] al reproducir: {e}")
+        return False
+
 
 def pausar():
     global device_id
     if device_id is None:
         esperar_dispositivo()
-    sp.pause_playback(device_id=device_id)
+    try:
+        sp.pause_playback(device_id=device_id)
+        return True
+    except Exception as e:
+        print(f"[ERROR] al pausar: {e}")
+        return False
+
 
 def siguiente():
+    global device_id
     if device_id is None:
         esperar_dispositivo()
-    sp.next_track()
+    try:
+        sp.next_track(device_id=device_id)
+        return True
+    except Exception as e:
+        print(f"[ERROR] al pasar a la siguiente canción: {e}")
+        return False
 
 def anterior():
+    global device_id
     if device_id is None:
         esperar_dispositivo()
-    sp.previous_track()
-
+    try:
+        sp.previous_track(device_id=device_id)
+        return True
+    except Exception as e:
+        print(f"[ERROR] al volver a la canción anterior: {e}")
+        return False
