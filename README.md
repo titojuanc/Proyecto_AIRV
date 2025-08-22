@@ -4,10 +4,10 @@
 Acá voy a dejar las tareas pendientes que tiene cada integrante:
 
 ## Gabriel
-. Realizar avances en el algoritmo main.
+. Avanzar con la parte gráfica de calendario.
 
 ## Salvador
-. Avanzar con el configuración inicial.
+. Terminar con la parte de bluetooth.
 
 ## Fran
-. Avanzar con la interfaz
+. Avanzar con la interfaz (WhatsApp en proceso).
