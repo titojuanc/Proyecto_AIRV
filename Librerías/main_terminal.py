@@ -1,9 +1,9 @@
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
-import musica_terminal as sc
-import mensajeria_terminal as mt
 import os
-
+import sys
+from musica import musica_terminal as sc
+from mensajeria import mensajeria_terminal as mt
 app = Flask(__name__)
 CORS(app)
 

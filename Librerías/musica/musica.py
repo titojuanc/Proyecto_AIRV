@@ -3,8 +3,15 @@ from spotipy.oauth2 import SpotifyOAuth
 import time
 import psutil
 import subprocess
-import escuchar_responder
 import asyncio
+import sys
+import os
+
+ruta_voz = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'reconocimiento_voz'))
+if ruta_voz not in sys.path:
+    sys.path.append(ruta_voz)
+    
+import escuchar_responder
 
 # Autenticación con Spotify
 sp = spotipy.Spotify(auth_manager=SpotifyOAuth(

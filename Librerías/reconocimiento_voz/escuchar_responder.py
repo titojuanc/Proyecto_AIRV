@@ -3,8 +3,12 @@ import edge_tts
 from pydub import AudioSegment
 from pydub.playback import play
 import asyncio
-import sonido
 import os
+import sys
+ruta_voz = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'sonido'))
+if ruta_voz not in sys.path:
+    sys.path.append(ruta_voz)
+import sonido
 
 async def speak(answer):
     """Genera el audio TTS y lo guarda en Ejemplos/message.mp3. También lo reproduce."""

@@ -1,9 +1,16 @@
 from bleak import BleakScanner, BleakClient
 import asyncio
-import escuchar_responder
 import os
 import subprocess
 import re
+import sys
+
+ruta_voz = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'reconocimiento_voz'))
+if ruta_voz not in sys.path:
+    sys.path.append(ruta_voz)
+    
+import escuchar_responder
+
 def looks_like_mac_with_dashes(name: str) -> bool:
     parts = name.split("-")
     return (

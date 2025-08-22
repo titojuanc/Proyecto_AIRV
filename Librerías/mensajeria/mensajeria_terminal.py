@@ -6,7 +6,7 @@ import pywhatkit
 import pyautogui
 import time
 
-archivo_contactos = "Proyecto_AIRV/Librerías/contactos.json"
+archivo_contactos = "Proyecto_AIRV/Librerías/mensajeria/contactos.json"
 
 def cargar_contactos():
     if os.path.exists(archivo_contactos):
