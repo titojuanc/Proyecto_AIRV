@@ -1,4 +1,11 @@
 from flask import Flask, render_template, request, redirect, url_for
+import os
+import sys
+
+var = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'Librerías', 'calendario'))
+if var not in sys.path:
+    sys.path.append(var)
+
 import calend_logic
 from datetime import datetime
 

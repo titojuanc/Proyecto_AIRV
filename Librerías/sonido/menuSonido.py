@@ -1,4 +1,9 @@
 import sonido
+import os
+import sys
+ruta_voz = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'reconocimiento_voz'))
+if ruta_voz not in sys.path:
+    sys.path.append(ruta_voz)
 import escuchar_responder
 import asyncio
 

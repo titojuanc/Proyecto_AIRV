@@ -1,9 +1,18 @@
 import schedule
-import sonido
 import os
+import sys
+var = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'sonido'))
+if var not in sys.path:
+    sys.path.append(var)
+import sonido
+
 from pydub.playback import play
 from pydub import AudioSegment
 from datetime import datetime
+
+ruta_voz = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'reconocimiento_voz'))
+if ruta_voz not in sys.path:
+    sys.path.append(ruta_voz)
 import escuchar_responder
 import asyncio
 from word2number import w2n
