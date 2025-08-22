@@ -18,4 +18,4 @@ Acá voy a dejar las tareas pendientes que tiene cada integrante:
 - Agregar la funcionalidad de silenciado de micrófono.
 - ~Organizar el repositorio~
 - Refactorizar las rutas de archivos.
-- Hacer la interfaz gráfica con la misma estética en todas sus secciones.
+- ~Hacer la interfaz gráfica con la misma estética en todas sus secciones.~
