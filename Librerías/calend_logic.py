@@ -43,6 +43,47 @@ def check_alarm(dia, hora):
 # ------------------------------
 # DATE & TASK FUNCTIONS
 # ------------------------------
+import os
+
+def date():
+    try:
+        fecha = current_date()  # e.g. "22082025"
+        hoy_file = "hoy.txt"
+        filename = f"{fecha}.txt"
+
+        # check if hoy.txt exists and which date it's for
+        old_fecha = None
+        if os.path.exists(hoy_file):
+            with open(hoy_file, "r") as hoy:
+                lines = hoy.readlines()
+                if lines and lines[0].startswith("#DATE:"):
+                    old_fecha = lines[0].strip().replace("#DATE:", "")
+
+        # if the date changed -> reset hoy.txt
+        if old_fecha != fecha:
+            contenido = ""
+            if os.path.exists(filename):
+                with open(filename, "r") as fechas:
+                    contenido = fechas.read().strip()
+
+            with open(hoy_file, "w") as hoy:
+                hoy.write(f"#DATE:{fecha}\n")
+                hoy.write(contenido)
+        else:
+            # same day -> just sync if tasks changed
+            if os.path.exists(filename):
+                with open(filename, "r") as fechas:
+                    contenido = fechas.read().strip()
+                with open(hoy_file, "r") as hoy:
+                    actual = "".join(hoy.readlines()[1:]).strip()  # skip #DATE line
+                if contenido != actual:
+                    with open(hoy_file, "w") as hoy:
+                        hoy.write(f"#DATE:{fecha}\n")
+                        hoy.write(contenido)
+
+    except Exception as e:
+        print(f"Error al manejar archivos: {e}")
+
 
 def current_date():
     """Return today's date as DDMMYYYY."""
@@ -72,6 +113,7 @@ def set_tasks(fecha_pasada, tarea):
 
 
 def delete_task(fecha, index, updated_tasks):
+    
     """
     Overwrite the tasks file for a given date with updated list.
     Fecha is DDMMYYYY string, index is integer, updated_tasks is list[str].
@@ -83,6 +125,7 @@ def delete_task(fecha, index, updated_tasks):
 
 
 def today_tasks():
+    date()
     """Return today's tasks from hoy.txt if exists."""
     try:
         with open("hoy.txt", "r") as hoy:

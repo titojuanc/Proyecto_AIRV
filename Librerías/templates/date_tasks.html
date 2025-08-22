@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Tareas de {{ fecha }}</title>
+    <title>Tareas de dia</title>
 </head>
 <body>
     <script>
@@ -9,7 +9,14 @@
             window.location.href="/"
         }
     </script>
-    <h1> Tareas del {{ fecha }}</h1>
+    <h1> Ingresar fecha:</h1>
+
+    <form action="/tasks" method="GET">
+        Fecha (DDMMYYYY): <input type="text" name="fecha" required><br><br>
+        <button type="submit">Guardar</button>
+    </form>
+
+    <h1> Tareas</h1>
     {% if tasks %}
         <ul>
             {% for task in tasks %}

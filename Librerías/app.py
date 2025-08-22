@@ -33,10 +33,12 @@ def today_tasks():
     return render_template('today_tasks.html', tasks=tasks)
 
 
-@app.route('/tasks/<fecha>')
-def date_tasks(fecha):
+@app.route('/tasks')
+def date_tasks():
+    fecha = request.args.get("fecha")
     tasks = calend_logic.get_tasks_for_date(fecha)
     return render_template('date_tasks.html', fecha=fecha, tasks=tasks)
+
 
 
 # ------------------------------
