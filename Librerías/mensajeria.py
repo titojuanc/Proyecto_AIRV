@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 import asyncio
 import escuchar_responder
 
-archivo_contactos = "contactos.json"
+archivo_contactos = "Proyecto_AIRV/Librerías/contactos.json"
 
 def enfocar_ventana_firefox():
     os.system("wmctrl -a 'Firefox'")

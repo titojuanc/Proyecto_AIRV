@@ -24,7 +24,7 @@
   <button onclick="whatsApp()">💬 WhatsApp</button>
   <button onclick="enviarAccion('microfono')">🎙️ Micrófono</button>
   <button onclick="spotify()">🎵 Spotify</button>
-  <button onclick="enviarAccion('parlante')">🔊 Parlante</button>
+  <button onclick="sonido()">🔊 sonido</button>
 
   <p id="estado"></p>
 
@@ -49,11 +49,15 @@
     }
 
     function spotify() {
-      window.location.href = "/spotify";
+      window.location.href = "/spotify"
     }
 
     function whatsApp() {
       window.location.href = "/mensajeria"
+    }
+
+    function sonido() {
+      window.location.href = "/sonido"
     }
 
   </script>
