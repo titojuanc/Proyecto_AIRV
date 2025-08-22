@@ -4,38 +4,49 @@ import escuchar_responder
 import os
 import subprocess
 import re
+def looks_like_mac_with_dashes(name: str) -> bool:
+    parts = name.split("-")
+    return (
+        len(parts) == 6
+        and all(len(p) == 2 and all(c in "0123456789ABCDEFabcdef" for c in p) for p in parts)
+    )
 async def scan():
     devices = await BleakScanner.discover()
     addresses=[]
     i=0
     client=None
+    opcion=None
+    device_adress=None
     for d in devices:
-        
-       
-        i=i+1
-        print(f"Opción{i}: Name: {d.name}, Address: {d.address}")
-        addresses.append(d.address)
-        #"""escuchar_responder.speak(f"Opción{i}: {d.name}")"""
-        
-        #"""opcion=escuchar_responder.listen()
-        #if i==5:
-        #    break
     
-    #match opcion:
-     #   case "opción uno":
-      #      device_adress= addresses[0]
-       # case "opción dos":
-        #    device_adress= addresses[1]
-        #case "opción tres":
-        #    device_adress= addresses[2]
-        #case "opción cuatro":
-         #   device_adress= addresses[3]
-        #case "opción cinco":
-         #   device_adress= addresses[4]
-        #case _:
-         #   escuchar_responder.speak(f"No entendí")
-    respuesta=input("a que dispositivo desea conectarse?")
-    connect(addresses[int(respuesta)-1])
+        
+        if(d.address!=d.name and d.name!=None and not looks_like_mac_with_dashes(d.name)):
+            i=i+1
+            print(f"Opción {i}: Name: {d.name}, Address: {d.address}")
+            addresses.append(d.address)
+            await escuchar_responder.speak(f"Opción {i}: {d.name}")
+            if i==5:
+                break
+    await escuchar_responder.speak("Que opción desea conectarse")
+    while opcion==None and device_adress==None:
+        opcion=escuchar_responder.listen()
+
+     
+    match opcion:
+        case "opción uno":
+            device_adress= addresses[0]
+        case "opción dos":
+            device_adress= addresses[1]
+        case "opción tres":
+            device_adress= addresses[2]
+        case "opción cuatro":
+            device_adress= addresses[3]
+        case "opción cinco":
+            device_adress= addresses[4]
+        case _:
+            await escuchar_responder.speak(f"No entendí")
+    if(device_adress!=None):
+        connect(device_adress)
 def connect(address):
     os.system(f"bluetoothctl pair {address}") 
     os.system(f"bluetoothctl connect {address}") 
@@ -81,19 +92,55 @@ def dispositivos_conectados():
                         break
 
                 dispositivos.append((mac, nombre))
-
-    for mac, nombre in dispositivos:
+    if dispositivos.__len__!=0:
+        respuesta=None
+        for mac, nombre in dispositivos:
+            
         
-       
-        i=i+1
-        print(f"Opción{i}: Name: {nombre}, Address: {mac}")
-        addresses.append(mac)
-    respuesta=input("a que dispositivo desea desconectarse?")
-    disconnect(addresses[int(respuesta)-1])
+            i=i+1
+            asyncio.run(escuchar_responder.speak(f"Opción {i}: {nombre}"))
+            addresses.append(mac)
+            if i==5:
+                break
+        asyncio.run(escuchar_responder.speak("Qué dispositivo desea desconectar?"))
+        device_adress=None
+        while respuesta==None and device_adress==None :
+            respuesta=escuchar_responder.listen()
+        match respuesta:
+            case "opción uno":
+                device_adress= addresses[0]
+            case "opción dos":
+                if addresses.__len__>=1:
+                    device_adress= addresses[1]
+            case "opción tres":
+                if addresses.__len__>=2:
+                    device_adress= addresses[2]
+            case "opción cuatro":
+                if addresses.__len__>=3:
+                    device_adress= addresses[3]
+            case "opción cinco":
+                if addresses.__len__>=4:
+                    device_adress= addresses[4]
+            case _:
+                asyncio.run(escuchar_responder.speak(f"No entendí"))
+        if device_adress!=None:
+            disconnect(device_adress)
+        
+def main():
+    asyncio.run(escuchar_responder.speak("Opciones de bluetooth"))  # O algún mensaje o sonido de acknowledge
+    user_input = escuchar_responder.listen()
+    if user_input:
+        match user_input:
+            case "conectar dispositivo":
+                asyncio.run(scan())
+            case "desconectar dispositivo":
+                dispositivos_conectados()
+            case "salir":
+                return
+            case _:
+                asyncio.run(escuchar_responder.speak("No entendí"))  # O algún mensaje o sonido de acknowledge
 
 
-dispositivos_conectados()
 
-asyncio.run(scan())
 #while True:
     #print("me corro")
