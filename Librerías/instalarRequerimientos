@@ -1,0 +1,37 @@
+import subprocess
+import sys
+
+# List of third-party dependencies extracted from your imports
+dependencies = [
+    "flask",
+    "flask-cors",
+    "pydub",
+    "speechrecognition",
+    "edge-tts",
+    "beautifulsoup4",
+    "requests",
+    "tinytuya",
+    "pyowm",
+    "matplotlib",
+    "spotipy",
+    "psutil",
+    "pywhatkit",
+    "pyautogui",
+    "word2number",
+    "schedule",
+    "bleak"
+]
+
+def install(package):
+    """Install a package via pip"""
+    subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+
+if __name__ == "__main__":
+    for dep in dependencies:
+        try:
+            print(f"Installing {dep}...")
+            install(dep)
+        except subprocess.CalledProcessError:
+            print(f"❌ Failed to install {dep}")
+        else:
+            print(f"✅ {dep} installed successfully")
