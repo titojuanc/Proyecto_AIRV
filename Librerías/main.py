@@ -5,7 +5,7 @@ import menuSonido
 import calend
 import initial_configuration
 import asyncio
-#import blutu
+import blutu
 
 # Debería quedar guardado en una memoria (archivos de texto), 
 # al entrar por primera vez al sistema debería estar en False,
@@ -38,9 +38,9 @@ def hearing():
                     case "mensajería":
                         mensajeria.main()
                         asyncio.run(escuchar_responder.speak("salí"))
-                    #case "música":
-                        #musica.main() # PENDIENTE
-                        #asyncio.run(escuchar_responder.speak("salí"))
+                    case "música":
+                        musica.main()
+                        asyncio.run(escuchar_responder.speak("salí"))
                     case "noticias":
                         news.fiveFirstHeaders()
                         asyncio.run(escuchar_responder.speak("salí"))
@@ -50,11 +50,11 @@ def hearing():
                     case "calendario":
                         calend.menuCalendario()
                         asyncio.run(escuchar_responder.speak("salí"))
-                    #case "bluetooth":
-                        #blutu.main() # PENDIENTE
+                    case "bluetooth":
+                        blutu.main()
                         asyncio.run(escuchar_responder.speak("salí"))
                     case "configuración":
-                        initial_config(True) # PENDIENTE    
+                        initial_config(True) 
                         asyncio.run(escuchar_responder.speak("salí"))
                     case "apagar":
                         exit(1) # y algún sonidito de apagado
