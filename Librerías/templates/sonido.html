@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Control de Volumen</title>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
   <div class="container">
@@ -20,12 +20,12 @@
       <p class="subtitle">Volumen actual: <span id="volDisplay">--</span>%</p>
 
       <div class="actions">
-        <button class="btn btn-primary" onclick="send('/volume/up')">🔊 Subir</button>
+        <button class="btn" onclick="send('/volume/up')">🔊 Subir</button>
         <button class="btn" onclick="send('/volume/down')">🔉 Bajar</button>
         <button class="btn" onclick="setVolume()">🎚 Establecer</button>
         <button class="btn" onclick="send('/volume/mute')">🔇 Mute</button>
         <button class="btn" onclick="send('/volume/unmute')">🔈 Unmute</button>
-        <button class="btn btn-outline" onclick="window.location.href='/'">⬅ Volver</button>
+        <button class="btn btn-outline btn-danger" onclick="window.location.href='/'">⬅ Volver</button>
       </div>
     </div>
   </div>

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Panel de Control</title>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
   <div class="container">
@@ -18,11 +18,11 @@
       </div>
 
       <div class="actions">
-        <button class="btn btn-primary" onclick="enviarAccion('noticias')">📰 Noticias</button>
         <button class="btn" onclick="whatsApp()">💬 WhatsApp</button>
         <button class="btn" onclick="enviarAccion('microfono')">🎙️ Micrófono</button>
         <button class="btn" onclick="spotify()">🎵 Spotify</button>
         <button class="btn" onclick="sonido()">🔊 Sonido</button>
+        <button class="btn" onclick="calendario()">📅 calendario</button>
       </div>
 
       <p id="estado" class="small"></p>
@@ -47,6 +47,7 @@
     function spotify(){ window.location.href='/spotify'; }
     function whatsApp(){ window.location.href='/mensajeria'; }
     function sonido(){ window.location.href='/sonido'; }
+    function calendario(){ window.location.href='/calendario'}
   </script>
 </body>
 </html>

@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Tareas por fecha</title>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
     <style>
@@ -178,7 +178,7 @@
         </div>
         <div class="actions">
           <button class="btn btn-primary" type="submit">Buscar</button>
-          <button class="btn btn-outline" type="button" onclick="window.location.href='/'">⬅ Volver</button>
+          <button class="btn btn-outline btn-danger" type="button" onclick="window.location.href='/calendario'">⬅ Volver</button>
         </div>
       </form>
 

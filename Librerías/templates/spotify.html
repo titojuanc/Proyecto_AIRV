@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Control de Spotify</title>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
   <div class="container">
@@ -26,19 +26,19 @@
         <div class="form-row">
           <label>Álbum</label>
           <input id="album" class="input" type="text" placeholder="Nombre del álbum">
-          <button class="btn" onclick="buscar('album')">💿 Buscar Álbum</button>
+          <button class="btn btn-outline" onclick="buscar('album')">💿 Buscar Álbum</button>
         </div>
       </div>
 
       <div class="actions">
-        <button class="btn btn-primary" onclick="enviarAccion('reproducir')">▶️ Reproducir</button>
+        <button class="btn btn" onclick="enviarAccion('reproducir')">▶️ Reproducir</button>
         <button class="btn" onclick="enviarAccion('pausar')">⏸️ Pausar</button>
         <button class="btn" onclick="enviarAccion('siguiente')">⏭️ Siguiente</button>
         <button class="btn" onclick="enviarAccion('anterior')">⏮️ Anterior</button>
       </div>
 
       <div class="actions">
-        <button class="btn btn-outline" onclick="window.location.href='/'">⬅ Volver</button>
+        <button class="btn btn-outline btn-danger" onclick="window.location.href='/'">⬅ Volver</button>
       </div>
 
       <p id="estado" class="small"></p>

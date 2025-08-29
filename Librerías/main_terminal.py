@@ -1,9 +1,11 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, redirect, url_for
 from flask_cors import CORS
 import os
 import sys
 from musica import musica_terminal as sc
 from mensajeria import mensajeria_terminal as mt
+from calendario import calend_logic
+from datetime import datetime
 app = Flask(__name__)
 CORS(app)
 
@@ -28,6 +30,10 @@ def mensajeria():
 @app.route('/sonido')
 def sonido():
     return render_template('sonido.html')
+
+@app.route('/calendario')
+def calendario():
+    return render_template('calendario.html')
 
 # ------------------- VOLUMEN -------------------
 
@@ -81,6 +87,56 @@ def unmute():
 @app.route('/volume/status', methods=['GET'])
 def get_volume():
     return jsonify({"volume": volumeFactor})
+
+# ------------------- CALENDARIO -------------------
+
+# ------------------------------
+# TASKS
+# ------------------------------
+
+@app.route('/add_task', methods=['GET', 'POST'])
+def add_task():
+    if request.method == 'POST':
+        fecha_str = request.form['fecha']
+        tarea = request.form['tarea']
+        try:
+            fecha = datetime.strptime(fecha_str, "%d%m%Y")
+            calend_logic.set_tasks(fecha, tarea)
+            return redirect(url_for('calendario'))
+        except ValueError:
+            return "Fecha inválida. Use formato DDMMYYYY."
+    return render_template('add_task.html')
+
+
+@app.route('/today_tasks')
+def today_tasks():
+    tasks = calend_logic.today_tasks()
+    return render_template('today_tasks.html', tasks=tasks)
+
+
+@app.route('/tasks')
+def date_tasks():
+    fecha = request.args.get("fecha")
+    tasks = calend_logic.get_tasks_for_date(fecha)
+    return render_template('date_tasks.html', fecha=fecha, tasks=tasks)
+
+
+
+# ------------------------------
+# ALARMS
+# ------------------------------
+
+@app.route('/set_alarm', methods=['GET', 'POST'])
+def set_alarm():
+    if request.method == 'POST':
+        fecha = request.form['fecha']
+        hora = calend_logic.formatear_hora(request.form['hora'])
+        if hora and not calend_logic.check_alarm(fecha, hora):
+            calend_logic.set_alarm(fecha, hora)
+            return redirect(url_for('index'))
+        else:
+            return "Hora inválida o alarma ya existente."
+    return render_template('alarms.html')
 
 # ------------------- MENSAJERÍA -------------------
 
