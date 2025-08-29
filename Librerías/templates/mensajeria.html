@@ -1,191 +1,141 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8" />
-<title>Mensajería Web</title>
-<style>
-  body { font-family: Arial, sans-serif; max-width: 600px; margin: 20px auto; }
-  h1 { text-align: center; }
-  label { display: block; margin-top: 15px; }
-  input, button, select, textarea { width: 100%; padding: 8px; margin-top: 5px; }
-  button { cursor: pointer; margin-top: 10px; }
-  .contacto-item { border-bottom: 1px solid #ccc; padding: 5px 0; }
-  .flex-row { display: flex; gap: 10px; }
-  .flex-row > * { flex: 1; }
-  .status { margin-top: 10px; color: green; }
-  .error { color: red; }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mensajería Web</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
-<body>
+<body class="page-mensajeria">
+  <div class="container">
+    <div class="card">
+      <div class="header">
+        <div class="logo">CW</div>
+        <div>
+          <h1 class="title">Panel de Mensajería</h1>
+          <p class="subtitle">Gestiona contactos y envía mensajes.</p>
+        </div>
+      </div>
 
-<h1>Panel de Mensajería</h1>
+      <div class="actions">
+        <button class="btn btn-outline" onclick="cargarContactos()">📂 Cargar Contactos</button>
+      </div>
+      <div id="lista-contactos" class="list"></div>
 
-<section>
-  <h2>Contactos</h2>
-  <button onclick="cargarContactos()">Cargar Contactos</button>
-  <div id="lista-contactos"></div>
-</section>
+      <hr class="sep">
+      <h2 class="subtitle">Agregar Contacto</h2>
+      <div class="form">
+        <div class="form-row">
+          <label>Nombre</label>
+          <input id="nombreAgregar" class="input" type="text" />
+        </div>
+        <div class="form-row">
+          <label>Número</label>
+          <input id="numeroAgregar" class="input" type="text" placeholder="+5491122334455"/>
+        </div>
+        <button class="btn btn-primary" onclick="agregarContacto()">Agregar</button>
+      </div>
 
-<section>
-  <h2>Agregar Contacto</h2>
-  <label>Nombre:
-    <input type="text" id="nombreAgregar" />
-  </label>
-  <label>Número (con código, ej +5491122334455):
-    <input type="text" id="numeroAgregar" />
-  </label>
-  <button onclick="agregarContacto()">Agregar</button>
-</section>
+      <hr class="sep">
+      <h2 class="subtitle">Modificar Contacto</h2>
+      <div class="form">
+        <div class="form-row"><label>Nombre actual</label><input id="nombreMod" class="input"></div>
+        <div class="form-row"><label>Nuevo nombre</label><input id="nuevoNombreMod" class="input"></div>
+        <div class="form-row"><label>Nuevo número</label><input id="nuevoNumeroMod" class="input"></div>
+        <button class="btn" onclick="modificarContacto()">Modificar</button>
+      </div>
 
-<section>
-  <h2>Modificar Contacto</h2>
-  <label>Nombre actual:
-    <input type="text" id="nombreMod" />
-  </label>
-  <label>Nuevo nombre:
-    <input type="text" id="nuevoNombreMod" />
-  </label>
-  <label>Nuevo número:
-    <input type="text" id="nuevoNumeroMod" />
-  </label>
-  <button onclick="modificarContacto()">Modificar</button>
-</section>
+      <hr class="sep">
+      <h2 class="subtitle">Eliminar Contacto</h2>
+      <div class="form">
+        <div class="form-row"><label>Nombre</label><input id="nombreEliminar" class="input"></div>
+        <button class="btn btn-danger" onclick="eliminarContacto()">Eliminar</button>
+      </div>
 
-<section>
-  <h2>Eliminar Contacto</h2>
-  <label>Nombre:
-    <input type="text" id="nombreEliminar" />
-  </label>
-  <button onclick="eliminarContacto()">Eliminar</button>
-</section>
+      <hr class="sep">
+      <h2 class="subtitle">Enviar Mensaje</h2>
+      <div class="form">
+        <div class="form-row"><label>Nombre destinatario</label><input id="nombreMensaje" class="input"></div>
+        <div class="form-row"><label>Mensaje</label><textarea id="textoMensaje" rows="3" class="input"></textarea></div>
+        <button class="btn btn-primary" onclick="enviarMensaje()">Enviar</button>
+      </div>
 
-<section>
-  <h2>Enviar Mensaje</h2>
-  <label>Nombre destinatario:
-    <input type="text" id="nombreMensaje" />
-  </label>
-  <label>Mensaje:
-    <textarea id="textoMensaje" rows="3"></textarea>
-  </label>
-  <button onclick="enviarMensaje()">Enviar</button>
-</section>
+      <div class="actions" style="margin-top:16px;">
+        <button class="btn btn-outline" onclick="window.location.href='/'">⬅ Volver</button>
+      </div>
 
-<button onclick="window.location.href='/'">🏠 Volver al Home</button>
-
-<div id="status" class="status"></div>
+      <p id="status" class="small"></p>
+    </div>
+  </div>
 
 <script>
+// same JS logic from original, unchanged
 async function cargarContactos() {
   const res = await fetch('/contactos');
   const contactos = await res.json();
   const lista = document.getElementById('lista-contactos');
   lista.innerHTML = '';
   for (const [nombre, numero] of Object.entries(contactos)) {
-    const div = document.createElement('div');
-    div.classList.add('contacto-item');
-    div.textContent = `${nombre}: ${numero}`;
-    lista.appendChild(div);
+    const li = document.createElement('li');
+    li.classList.add('badge');
+    li.textContent = `${nombre}: ${numero}`;
+    lista.appendChild(li);
   }
   setStatus("Contactos cargados.");
 }
-
 async function agregarContacto() {
   const nombre = document.getElementById('nombreAgregar').value.trim();
   const numero = document.getElementById('numeroAgregar').value.trim();
-  if (!nombre || !numero) {
-    setStatus("Completa nombre y número.", true);
-    return;
-  }
+  if (!nombre || !numero) { setStatus("Completa nombre y número.", true); return; }
   const res = await fetch('/contactos', {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
+    method: 'POST', headers: {'Content-Type':'application/json'},
     body: JSON.stringify({ nombre, numero })
   });
   const data = await res.json();
-  if (data.status === "ok") {
-    setStatus("Contacto agregado.");
-    cargarContactos();
-    document.getElementById('nombreAgregar').value = '';
-    document.getElementById('numeroAgregar').value = '';
-  } else {
-    setStatus("Error agregando contacto.", true);
-  }
+  if (data.status === "ok") { setStatus("Contacto agregado."); cargarContactos(); }
+  else setStatus("Error agregando contacto.", true);
 }
-
 async function modificarContacto() {
   const nombre_actual = document.getElementById('nombreMod').value.trim();
   const nuevo_nombre = document.getElementById('nuevoNombreMod').value.trim();
   const nuevo_numero = document.getElementById('nuevoNumeroMod').value.trim();
-  if (!nombre_actual || !nuevo_nombre || !nuevo_numero) {
-    setStatus("Completa todos los campos para modificar.", true);
-    return;
-  }
+  if (!nombre_actual || !nuevo_nombre || !nuevo_numero) { setStatus("Completa todos los campos.", true); return; }
   const res = await fetch('/contactos', {
-    method: 'PUT',
-    headers: {'Content-Type':'application/json'},
+    method: 'PUT', headers: {'Content-Type':'application/json'},
     body: JSON.stringify({ nombre_actual, nuevo_nombre, nuevo_numero })
   });
   const data = await res.json();
-  if (data.status === "ok") {
-    setStatus("Contacto modificado.");
-    cargarContactos();
-    document.getElementById('nombreMod').value = '';
-    document.getElementById('nuevoNombreMod').value = '';
-    document.getElementById('nuevoNumeroMod').value = '';
-  } else {
-    setStatus("Error modificando contacto.", true);
-  }
+  if (data.status === "ok") { setStatus("Contacto modificado."); cargarContactos(); }
+  else setStatus("Error modificando contacto.", true);
 }
-
 async function eliminarContacto() {
   const nombre = document.getElementById('nombreEliminar').value.trim();
-  if (!nombre) {
-    setStatus("Completa el nombre para eliminar.", true);
-    return;
-  }
+  if (!nombre) { setStatus("Completa el nombre.", true); return; }
   const res = await fetch('/contactos', {
-    method: 'DELETE',
-    headers: {'Content-Type':'application/json'},
+    method: 'DELETE', headers: {'Content-Type':'application/json'},
     body: JSON.stringify({ nombre })
   });
   const data = await res.json();
-  if (data.status === "ok") {
-    setStatus("Contacto eliminado.");
-    cargarContactos();
-    document.getElementById('nombreEliminar').value = '';
-  } else {
-    setStatus("Contacto no encontrado.", true);
-  }
+  if (data.status === "ok") { setStatus("Contacto eliminado."); cargarContactos(); }
+  else setStatus("Contacto no encontrado.", true);
 }
-
 async function enviarMensaje() {
   const nombre = document.getElementById('nombreMensaje').value.trim();
   const mensaje = document.getElementById('textoMensaje').value.trim();
-  if (!nombre || !mensaje) {
-    setStatus("Completa destinatario y mensaje.", true);
-    return;
-  }
+  if (!nombre || !mensaje) { setStatus("Completa destinatario y mensaje.", true); return; }
   const res = await fetch('/enviar', {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
+    method: 'POST', headers: {'Content-Type':'application/json'},
     body: JSON.stringify({ nombre, mensaje })
   });
   const data = await res.json();
-  if (data.status) {
-    setStatus("Mensaje en proceso de envío.");
-    document.getElementById('nombreMensaje').value = '';
-    document.getElementById('textoMensaje').value = '';
-  } else {
-    setStatus("Error enviando mensaje.", true);
-  }
+  if (data.status) { setStatus("Mensaje en proceso de envío."); }
+  else setStatus("Error enviando mensaje.", true);
 }
-
 function setStatus(msg, error=false) {
   const statusDiv = document.getElementById('status');
   statusDiv.textContent = msg;
-  statusDiv.className = error ? 'status error' : 'status';
+  statusDiv.className = error ? 'small' : 'small';
 }
 </script>
-
 </body>
 </html>

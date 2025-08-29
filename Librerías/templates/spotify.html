@@ -2,90 +2,72 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Control de Spotify</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      padding-top: 40px;
-    }
-    button {
-      padding: 10px 20px;
-      font-size: 16px;
-      margin: 8px;
-      cursor: pointer;
-    }
-    input {
-      padding: 10px;
-      font-size: 16px;
-      width: 60%;
-      margin: 5px auto;
-      display: block;
-    }
-  </style>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <h1>Control de Spotify</h1>
+  <div class="container">
+    <div class="card">
+      <div class="header">
+        <div class="logo">CW</div>
+        <div>
+          <h1 class="title">Control de Spotify</h1>
+          <p class="subtitle">Busca música y controla la reproducción.</p>
+        </div>
+      </div>
 
-  <div>
-    <input type="text" id="cancion" placeholder="Nombre de la canción">
-    <button onclick="buscar('cancion')">🔍 Buscar Canción</button>
+      <div class="form">
+        <div class="form-row">
+          <label>Canción</label>
+          <input id="cancion" class="input" type="text" placeholder="Nombre de la canción">
+          <button class="btn btn-primary" onclick="buscar('cancion')">🔍 Buscar Canción</button>
+        </div>
+        <div class="form-row">
+          <label>Álbum</label>
+          <input id="album" class="input" type="text" placeholder="Nombre del álbum">
+          <button class="btn" onclick="buscar('album')">💿 Buscar Álbum</button>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-primary" onclick="enviarAccion('reproducir')">▶️ Reproducir</button>
+        <button class="btn" onclick="enviarAccion('pausar')">⏸️ Pausar</button>
+        <button class="btn" onclick="enviarAccion('siguiente')">⏭️ Siguiente</button>
+        <button class="btn" onclick="enviarAccion('anterior')">⏮️ Anterior</button>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-outline" onclick="window.location.href='/'">⬅ Volver</button>
+      </div>
+
+      <p id="estado" class="small"></p>
+    </div>
   </div>
 
-  <div>
-    <input type="text" id="album" placeholder="Nombre del álbum">
-    <button onclick="buscar('album')">💿 Buscar Álbum</button>
-  </div>
-
-  <hr style="margin: 30px 0; width: 80%;">
-
-  <button onclick="enviarAccion('reproducir')">▶️ Reproducir</button>
-  <button onclick="enviarAccion('pausar')">⏸️ Pausar</button>
-  <button onclick="enviarAccion('siguiente')">⏭️ Pasar Canción</button>
-  <button onclick="enviarAccion('anterior')">⏮️ Canción Anterior</button><br><br>
-
-  <button onclick="window.location.href='/'">🏠 Volver al Home</button>
-
-  <p id="estado"></p>
-
-  <script>
-    function enviarAccion(accion) {
-      fetch('http://localhost:5000/accion', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ accion: accion })
-      })
-      .then(res => res.json())
-      .then(data => {
-        document.getElementById("estado").innerText = "Acción enviada: " + data.accion_recibida;
-      })
-      .catch(error => {
-        console.error(error);
-        document.getElementById("estado").innerText = "Error al enviar acción.";
-      });
-    }
-
-    function buscar(tipo) {
-      const valor = document.getElementById(tipo).value.trim();
-      if (valor === "") {
-        alert("Por favor ingresa un nombre.");
-        return;
-      }
-
-      fetch('http://localhost:5000/accion', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ accion: 'buscar_' + tipo, nombre: valor })
-      })
-      .then(res => res.json())
-      .then(data => {
-        document.getElementById("estado").innerText = `Buscando ${tipo}: ${data.nombre}`;
-      })
-      .catch(error => {
-        console.error(error);
-        document.getElementById("estado").innerText = "Error al buscar.";
-      });
-    }
-  </script>
+<script>
+function enviarAccion(accion) {
+  fetch('http://localhost:5000/accion', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ accion: accion })
+  })
+  .then(res => res.json())
+  .then(data => { document.getElementById("estado").innerText = "Acción enviada: " + data.accion_recibida; })
+  .catch(error => { document.getElementById("estado").innerText = "Error al enviar acción."; });
+}
+function buscar(tipo) {
+  const valor = document.getElementById(tipo).value.trim();
+  if (valor === "") { alert("Por favor ingresa un nombre."); return; }
+  fetch('http://localhost:5000/accion', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ accion: 'buscar_' + tipo, nombre: valor })
+  })
+  .then(res => res.json())
+  .then(data => { document.getElementById("estado").innerText = `Buscando ${tipo}: ${data.nombre}`; })
+  .catch(error => { document.getElementById("estado").innerText = "Error al buscar."; });
+}
+</script>
 </body>
 </html>

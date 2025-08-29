@@ -2,95 +2,54 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Control de Volumen</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f2f2f2;
-      text-align: center;
-      padding: 40px;
-    }
-
-    h1 {
-      color: #333;
-      margin-bottom: 20px;
-    }
-
-    p {
-      font-size: 1.2em;
-      margin-bottom: 30px;
-    }
-
-    span#volDisplay {
-      font-weight: bold;
-      color: #007BFF;
-    }
-
-    button {
-      background-color: #007BFF;
-      color: white;
-      border: none;
-      padding: 12px 20px;
-      margin: 8px;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 16px;
-      transition: background-color 0.3s ease;
-    }
-
-    button:hover {
-      background-color: #0056b3;
-    }
-
-    button:active {
-      background-color: #003d80;
-    }
-
-    button:last-of-type {
-      background-color: #6c757d;
-    }
-
-    button:last-of-type:hover {
-      background-color: #495057;
-    }
-  </style>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <h1>Asistente de Volumen</h1>
-  <p>Volumen actual: <span id="volDisplay">--</span>%</p>
+  <div class="container">
+    <div class="card">
+      <div class="header">
+        <div class="logo">CW</div>
+        <div>
+          <h1 class="title">Asistente de Volumen</h1>
+          <p class="subtitle">Controla el volumen del sistema.</p>
+        </div>
+      </div>
 
-  <button onclick="send('/volume/up')">🔊 Subir</button>
-  <button onclick="send('/volume/down')">🔉 Bajar</button>
-  <button onclick="setVolume()">🎚 Establecer volumen</button>
-  <button onclick="send('/volume/mute')">🔇 Mute</button>
-  <button onclick="send('/volume/unmute')">🔈 Unmute</button>
-  <button onclick="window.location.href='/'">🏠 Volver al Home</button>
+      <p class="subtitle">Volumen actual: <span id="volDisplay">--</span>%</p>
 
-  <script>
-    function updateVolume() {
-      fetch('/volume/status')
-        .then(r => r.json())
-        .then(data => {
-          document.getElementById('volDisplay').innerText = data.volume;
-        });
-    }
+      <div class="actions">
+        <button class="btn btn-primary" onclick="send('/volume/up')">🔊 Subir</button>
+        <button class="btn" onclick="send('/volume/down')">🔉 Bajar</button>
+        <button class="btn" onclick="setVolume()">🎚 Establecer</button>
+        <button class="btn" onclick="send('/volume/mute')">🔇 Mute</button>
+        <button class="btn" onclick="send('/volume/unmute')">🔈 Unmute</button>
+        <button class="btn btn-outline" onclick="window.location.href='/'">⬅ Volver</button>
+      </div>
+    </div>
+  </div>
 
-    function send(endpoint) {
-      fetch(endpoint, { method: 'POST' }).then(updateVolume);
-    }
-
-    function setVolume() {
-      let vol = prompt("Ingresa volumen (0-100):");
-      if (vol !== null) {
-        fetch('/volume/set', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ volume: vol })
-        }).then(updateVolume);
-      }
-    }
-
-    updateVolume(); // Al cargar la página
-  </script>
+<script>
+function updateVolume() {
+  fetch('/volume/status')
+    .then(r => r.json())
+    .then(data => { document.getElementById('volDisplay').innerText = data.volume; });
+}
+function send(endpoint) {
+  fetch(endpoint, { method: 'POST' }).then(updateVolume);
+}
+function setVolume() {
+  let vol = prompt("Ingresa volumen (0-100):");
+  if (vol !== null) {
+    fetch('/volume/set', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ volume: vol })
+    }).then(updateVolume);
+  }
+}
+updateVolume();
+</script>
 </body>
 </html>
