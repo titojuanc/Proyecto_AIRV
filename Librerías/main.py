@@ -1,11 +1,12 @@
-import escuchar_responder
+from reconocimiento_voz import escuchar_responder
 import mensajeria
-import news
-import menuSonido
-import calend
+from noticias import news
+from sonido import menuSonido
+from calendario import calend
 import initial_configuration
 import asyncio
-import blutu
+from bluetooth import blutu
+from musica import musica
 
 # Debería quedar guardado en una memoria (archivos de texto), 
 # al entrar por primera vez al sistema debería estar en False,
