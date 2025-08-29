@@ -7,11 +7,12 @@ import initial_configuration
 import asyncio
 from bluetooth import blutu
 from musica import musica
+import os
 
 # Debería quedar guardado en una memoria (archivos de texto), 
 # al entrar por primera vez al sistema debería estar en False,
 # luego de entrar por primera vez, que quede en True.
-initial_config=False
+
 
 def initial_configurationf(primera_vez):
     initial_configuration.main(primera_vez)
@@ -55,16 +56,22 @@ def hearing():
                         blutu.main()
                         asyncio.run(escuchar_responder.speak("salí"))
                     case "configuración":
-                        initial_config(True) 
+                        initial_configuration.main(True) 
                         asyncio.run(escuchar_responder.speak("salí"))
                     case "apagar":
                         exit(1) # y algún sonidito de apagado
                     case _:
                         return
-            
-while True:
-    if initial_config==False:
-        initial_configurationf(True)
-        initial_config=True
-    hearing()
+
+def run_main_voice(initial_config):      
+    while True:
+        status="true"
+        if initial_config==False:
+            initial_configurationf(True)
+            initial_config=True
+        if os.path.exists("mic.txt"):
+            with open ("mic.txt","r") as mic:
+                status=mic.read()
+        if status=="true":
+            hearing()
     

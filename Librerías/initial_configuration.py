@@ -2,7 +2,7 @@
 # se está accediendo por primera vez, o si simplemente
 # se quiere cambiar algo de la configuración. 
 import asyncio
-import escuchar_responder
+from reconocimiento_voz import escuchar_responder
 
 
 

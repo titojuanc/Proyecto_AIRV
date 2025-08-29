@@ -1,10 +1,10 @@
-import sonido
+from sonido import sonido_process
 import os
 import sys
 ruta_voz = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'reconocimiento_voz'))
 if ruta_voz not in sys.path:
     sys.path.append(ruta_voz)
-import escuchar_responder
+from reconocimiento_voz import escuchar_responder
 import asyncio
 
 def menuSonido():
@@ -14,17 +14,17 @@ def menuSonido():
         if teto:
             match teto:
                 case "subir volumen":
-                    sonido.volumeUp()
+                    sonido_process.volumeUp()
                 case "bajar volumen":
-                    sonido.volumeDown()
+                    sonido_process.volumeDown()
                 case "mutear":
-                    sonido.mute()
+                    sonido_process.mute()
                 case "desmutear":
-                    sonido.unmute()
+                    sonido_process.unmute()
                 case "ajustar volumen":
                     asyncio.run(escuchar_responder.speak("¿Qué nivel de volumen? del cero al 100"))
                     volumen = escuchar_responder.listen()
-                    sonido.set_volume(volumen)
+                    sonido_process.set_volume(volumen)
                 case "salir":
                     break
                 case "ayuda":

@@ -10,8 +10,8 @@ app = Flask(__name__)
 CORS(app)
 
 # Variables de volumen
-volumeFactor = 50
-lastVolume = 50
+volumeFactor = 100
+lastVolume = 100
 
 # ------------------- RUTAS HTML -------------------
 
@@ -37,56 +37,68 @@ def calendario():
 
 # ------------------- VOLUMEN -------------------
 
-def apply_volume():
+import subprocess
+import re
+
+def get_system_volume():
     try:
-        os.system(f"pactl set-sink-volume @DEFAULT_SINK@ {volumeFactor}%")
-        return jsonify({"volume": volumeFactor})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        salida = subprocess.check_output(
+            ["pactl", "get-sink-volume", "@DEFAULT_SINK@"], text=True
+        )
+        match = re.search(r'(\d+)%', salida)
+        return int(match.group(1)) if match else 0
+    except Exception:
+        return 0
+
+def get_mute_status():
+    try:
+        salida = subprocess.check_output(
+            ["pactl", "get-sink-mute", "@DEFAULT_SINK@"], text=True
+        )
+        return "yes" in salida.lower()
+    except Exception:
+        return False
 
 @app.route('/volume/up', methods=['POST'])
 def volume_up():
-    global volumeFactor
-    volumeFactor = min(volumeFactor + 5, 100)
-    return apply_volume()
+    os.system("pactl set-sink-volume @DEFAULT_SINK@ +5%")
+    return jsonify({"volume": get_system_volume()})
 
 @app.route('/volume/down', methods=['POST'])
 def volume_down():
-    global volumeFactor
-    volumeFactor = max(volumeFactor - 5, 0)
-    return apply_volume()
+    os.system("pactl set-sink-volume @DEFAULT_SINK@ -5%")
+    return jsonify({"volume": get_system_volume()})
 
 @app.route('/volume/set', methods=['POST'])
 def set_volume():
-    global volumeFactor
     data = request.json
     try:
         newVolume = int(data.get("volume"))
         if 0 <= newVolume <= 100:
-            volumeFactor = newVolume
+            os.system(f"pactl set-sink-volume @DEFAULT_SINK@ {newVolume}%")
+            return jsonify({"volume": get_system_volume()})
         else:
             return jsonify({"error": "Volumen fuera de rango (0-100)."}), 400
     except:
         return jsonify({"error": "Entrada inválida, se esperaba un número."}), 400
-    return apply_volume()
 
 @app.route('/volume/mute', methods=['POST'])
 def mute():
-    global volumeFactor, lastVolume
-    lastVolume = volumeFactor
-    volumeFactor = 0
-    return apply_volume()
+    os.system("pactl set-sink-mute @DEFAULT_SINK@ 1")
+    return jsonify({"muted": True, "volume": get_system_volume()})
 
 @app.route('/volume/unmute', methods=['POST'])
 def unmute():
-    global volumeFactor
-    if volumeFactor == 0:
-        volumeFactor = lastVolume
-    return apply_volume()
+    os.system("pactl set-sink-mute @DEFAULT_SINK@ 0")
+    return jsonify({"muted": False, "volume": get_system_volume()})
 
 @app.route('/volume/status', methods=['GET'])
 def get_volume():
-    return jsonify({"volume": volumeFactor})
+    return jsonify({
+        "volume": get_system_volume(),
+        "muted": get_mute_status()
+    })
+
 
 # ------------------- CALENDARIO -------------------
 
@@ -252,7 +264,31 @@ def recibir_datos():
 
     elif accion == "microfono":
         print("[Sistema] Activando micrófono...")
-        return jsonify({"status": "micrófono activado"})
+        status = "true"
+
+        # Leer el estado actual si existe
+        if os.path.exists("mic.txt"):
+            with open("mic.txt", "r") as mic:
+                status = mic.read().strip()
+
+        # Cambiar el estado (toggle)
+        if status == "false":
+            status = "true"
+        else:
+            status = "false"
+
+        # Guardar el nuevo estado
+        with open("mic.txt", "w") as mic:
+            mic.write(status)
+
+        # Devolver al frontend el estado actualizado
+        return jsonify({
+            "accion_recibida": accion,
+            "estado": status
+        })
+
+
+        
 
     elif accion == "sonido":
         print("[Sistema] Controlando parlante...")
@@ -262,5 +298,5 @@ def recibir_datos():
         print(f"[Advertencia] Acción no reconocida: {accion}")
         return jsonify({"status": "acción no reconocida", "accion_recibida": accion}), 400
 
-if __name__ == '__main__':
+def run_terminal():
     app.run(host='0.0.0.0', port=5000)

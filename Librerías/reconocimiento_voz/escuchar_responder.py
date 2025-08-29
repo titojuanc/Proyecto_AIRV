@@ -5,10 +5,7 @@ from pydub.playback import play
 import asyncio
 import os
 import sys
-ruta_voz = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'sonido'))
-if ruta_voz not in sys.path:
-    sys.path.append(ruta_voz)
-import sonido
+from sonido import sonido_process
 
 async def speak(answer):
     """Genera el audio TTS y lo guarda en Ejemplos/message.mp3. También lo reproduce."""
@@ -30,7 +27,7 @@ def listen(device_index=None):
         print("Ajustando ruido ambiental, espera...")
         recognizer.adjust_for_ambient_noise(source, duration=1)
         print("Escuchando, habla ahora...")
-        sonido.confirmationSound()
+        sonido_process.confirmationSound()
         try:
             audio = recognizer.listen(source, timeout=17, phrase_time_limit=15)
             print("Procesando...")

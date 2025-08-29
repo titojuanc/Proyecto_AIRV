@@ -38,7 +38,7 @@
       })
       .then(response => response.json())
       .then(data => {
-        document.getElementById("estado").innerText = "Acción enviada: " + data.accion_recibida;
+        document.getElementById("estado").innerText = "Micrófono: " + data.estado;
       })
       .catch(error => {
         document.getElementById("estado").innerText = "Error al enviar acción.";
