@@ -14,9 +14,9 @@ if __name__ == "__main__":
     t2 = threading.Thread(target=run_main_voice)
 
     # Start both
-    t1.start()
     t2.start()
+    t1.start()
 
     # Optionally wait for both to finish
-    t1.join()
     t2.join()
+    t1.join()

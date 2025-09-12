@@ -8,6 +8,7 @@ from reconocimiento_voz import escuchar_responder
 import asyncio
 
 def menuSonido():
+    asyncio.run(escuchar_responder.speak("Estamos en sonido"))
     #Voice-controlled menu for sound settings
     while True:
         teto = escuchar_responder.listen()

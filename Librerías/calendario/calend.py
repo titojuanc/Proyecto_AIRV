@@ -183,6 +183,7 @@ def todayTasks():
         return []
 
 def menuCalendario():
+    asyncio.run(escuchar_responder.speak("Estamos en calendario"))
     while True:
         teto = escuchar_responder.listen()
         if teto:
