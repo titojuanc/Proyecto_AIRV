@@ -42,11 +42,12 @@ def check_alarm(dia, hora):
                 continue
             parts = line.split(",")
             if len(parts) != 2:
-                continue  # skip malformed lines
+                continue
             d, h = parts
             if str(d) == str(dia) and h == hora:
                 return True
     return False
+
 
 
 

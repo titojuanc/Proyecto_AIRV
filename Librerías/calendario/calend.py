@@ -2,19 +2,13 @@ import schedule
 import os
 import sys
 import time
-var = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'sonido'))
-if var not in sys.path:
-    sys.path.append(var)
-import sonido
+from sonido import sonido_process
 
 from pydub.playback import play
 from pydub import AudioSegment
 from datetime import datetime
 
-ruta_voz = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'reconocimiento_voz'))
-if ruta_voz not in sys.path:
-    sys.path.append(ruta_voz)
-import escuchar_responder
+from reconocimiento_voz import escuchar_responder
 import asyncio
 from word2number import w2n
 
@@ -91,9 +85,12 @@ def formatear_hora(hora):
 
 def alarm():
     try:
-        audio = AudioSegment.from_mp3("listen.mp3")
+        folder_path = "audio"
+        os.makedirs(folder_path, exist_ok=True)
+
+        file_path = os.path.join(folder_path, "listen.mp3")
+        audio = AudioSegment.from_mp3(file_path)
         play(audio)
-        sonido.set_volume(100)
     except Exception as e:
         print(f"Error al reproducir alarma: {e}")
 
@@ -109,14 +106,22 @@ def setAlarm(diaa, formHora):
         print("Error: formato de día inválido.")
 
 def check_alarm(dia, hora):
+    """Check if an alarm exists for given date and hour."""
     if not os.path.exists(ALARM_FILE):
         return False
     with open(ALARM_FILE, "r") as f:
         for line in f:
-            d, h = line.strip().split(",")
+            line = line.strip()
+            if not line:
+                continue
+            parts = line.split(",")
+            if len(parts) != 2:
+                continue
+            d, h = parts
             if str(d) == str(dia) and h == hora:
                 return True
     return False
+
     
 def date():
     try:
@@ -182,6 +187,8 @@ def todayTasks():
     except Exception as e:
         print(f"Error al leer tareas: {e}")
         return []
+
+
 def run_alarm_checker():
     last_minute = -1
     while True:
@@ -189,13 +196,17 @@ def run_alarm_checker():
         current_minute = now.tm_min
         if current_minute != last_minute:
             last_minute = current_minute
-            dia = now.tm_wday 
+
+            # Format date as DDMMYYYY
+            dia = time.strftime("%d%m%Y", now)
+            # Format hour as HH:MM
             hora = time.strftime("%H:%M", now)
 
             if check_alarm(dia, hora):
                 alarm()
 
         time.sleep(1)
+
 
 def menuCalendario():
     asyncio.run(escuchar_responder.speak("Estamos en calendario"))

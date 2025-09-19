@@ -145,7 +145,7 @@ def set_alarm():
         hora = calend_logic.formatear_hora(request.form['hora'])
         if len(fecha) == 8 and hora and not calend_logic.check_alarm(fecha, hora):
             calend_logic.set_alarm(fecha, hora)
-            return redirect(url_for('index'))
+            return redirect(url_for('home'))
         else:
             return "Fecha u hora inválida o alarma ya existente."
 
