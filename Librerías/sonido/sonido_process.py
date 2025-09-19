@@ -2,12 +2,12 @@ from pydub.playback import play
 from pydub import AudioSegment
 import os
 
-# Volume state variables
+# Variables para controlar el volumen
 volumeFactor = 100
-lastVolume = 100  # Default to initial max volume
+lastVolume = 100  # Por defecto al volumen máximo inicial
 
 def confirmationSound():
-    """Play confirmation sound safely"""
+    """Reproducir sonido de confirmación de manera segura"""
     confirm_volume()
     folderPath="audio"
     file_path = os.path.join(folderPath, "f1.mp3")
@@ -23,19 +23,19 @@ def confirmationSound():
         print(f"Error al reproducir sonido: {e}")
 
 def volumeUp():
-    """Increase volume by 5% (max 100%)"""
+    """Aumentar el volumen en un 5% (máx 100%)"""
     global volumeFactor
     volumeFactor = min(volumeFactor + 5, 100)
     confirm_volume()
 
 def volumeDown():
-    """Decrease volume by 5% (min 0%)"""
+    """Disminuir el volumen en un 5% (mín 0%)"""
     global volumeFactor
     volumeFactor = max(volumeFactor - 5, 0)
     confirm_volume()
 
 def set_volume(newVolume):
-    """Set volume safely with validation"""
+    """Establecer el volumen de manera segura con validación"""
     global volumeFactor
     try:
         newVolume = int(newVolume)
@@ -49,7 +49,7 @@ def set_volume(newVolume):
     confirm_volume()
 
 def confirm_volume():
-    """Apply volume level to system"""
+    """Aplicar el nivel de volumen al sistema"""
     global volumeFactor
     try:
         os.system(f"pactl set-sink-volume @DEFAULT_SINK@ {volumeFactor}%")
@@ -57,17 +57,18 @@ def confirm_volume():
         print(f"Error al ajustar el volumen: {e}")
 
 def mute():
-    """Mute sound, saving previous volume"""
+    """Silenciar el sonido, guardando el volumen anterior"""
     global volumeFactor, lastVolume
     lastVolume = volumeFactor
     volumeFactor = 0
     confirm_volume()
 
 def unmute():
-    """Restore volume if previously muted"""
+    """Restaurar el volumen si estaba previamente silenciado"""
     global volumeFactor
     if volumeFactor == 0:
         volumeFactor = lastVolume
         confirm_volume()
+
 
 

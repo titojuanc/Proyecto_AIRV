@@ -22,6 +22,7 @@ async def speak(answer):
     play(audio)
 
 def listen(device_index=None):
+    """ Congela el programa y devuelve un String de lo que escuchó. Si hace timeout o no escucha bien el audio, devuelve None  """
     recognizer = sr.Recognizer()
     with sr.Microphone(device_index=device_index) as source:
         print("Ajustando ruido ambiental, espera...")
