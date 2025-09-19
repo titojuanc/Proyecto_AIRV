@@ -12,12 +12,15 @@ if ruta_voz not in sys.path:
 import escuchar_responder
 
 def looks_like_mac_with_dashes(name: str) -> bool:
+    """Verifica si una cadena tiene el formato de una dirección MAC con guiones"""
     parts = name.split("-")
     return (
         len(parts) == 6
         and all(len(p) == 2 and all(c in "0123456789ABCDEFabcdef" for c in p) for p in parts)
     )
+
 async def scan():
+    """Escanea dispositivos Bluetooth cercanos, lista opciones por voz y permite seleccionar uno para conectar"""
     devices = await BleakScanner.discover()
     addresses=[]
     i=0
@@ -54,17 +57,19 @@ async def scan():
             await escuchar_responder.speak(f"No entendí")
     if(device_adress!=None):
         connect(device_adress)
+
 def connect(address):
+    """Conecta y confía en un dispositivo Bluetooth dado su address"""
     os.system(f"bluetoothctl pair {address}") 
     os.system(f"bluetoothctl connect {address}") 
     os.system(f"bluetoothctl trust {address}") 
 
 def disconnect(address):
+    """Desconecta un dispositivo Bluetooth dado su address"""
     os.system(f"bluetoothctl disconnect {address}") 
 
-
-
 def dispositivos_conectados():
+    """Lista dispositivos Bluetooth conectados, permite seleccionar uno por voz y desconectarlo"""
     addresses=[]
     i=0
 
@@ -134,6 +139,7 @@ def dispositivos_conectados():
             disconnect(device_adress)
         
 def main():
+    """Función principal que escucha la acción del usuario y llama a conectar o desconectar dispositivos"""
     asyncio.run(escuchar_responder.speak("Opciones de bluetooth"))  # O algún mensaje o sonido de acknowledge
     user_input = escuchar_responder.listen()
     if user_input:
@@ -146,8 +152,3 @@ def main():
                 return
             case _:
                 asyncio.run(escuchar_responder.speak("No entendí"))  # O algún mensaje o sonido de acknowledge
-
-
-
-#while True:
-    #print("me corro")
