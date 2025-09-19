@@ -1,6 +1,7 @@
 import schedule
 import os
 import sys
+import time
 var = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'sonido'))
 if var not in sys.path:
     sys.path.append(var)
@@ -181,6 +182,20 @@ def todayTasks():
     except Exception as e:
         print(f"Error al leer tareas: {e}")
         return []
+def run_alarm_checker():
+    last_minute = -1
+    while True:
+        now = time.localtime()
+        current_minute = now.tm_min
+        if current_minute != last_minute:
+            last_minute = current_minute
+            dia = now.tm_wday 
+            hora = time.strftime("%H:%M", now)
+
+            if check_alarm(dia, hora):
+                alarm()
+
+        time.sleep(1)
 
 def menuCalendario():
     asyncio.run(escuchar_responder.speak("Estamos en calendario"))

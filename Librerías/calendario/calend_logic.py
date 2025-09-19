@@ -23,9 +23,12 @@ def formatear_hora(hora):
 
 
 def set_alarm(dia, hora_formateada):
-    """Save a new alarm."""
+    """Save a new alarm in dia,hora format."""
+    if not hora_formateada:
+        return
     with open(ALARM_FILE, "a") as f:
         f.write(f"{dia},{hora_formateada}\n")
+
 
 
 def check_alarm(dia, hora):
@@ -34,10 +37,17 @@ def check_alarm(dia, hora):
         return False
     with open(ALARM_FILE, "r") as f:
         for line in f:
-            d, h = line.strip().split(",")
+            line = line.strip()
+            if not line:
+                continue
+            parts = line.split(",")
+            if len(parts) != 2:
+                continue  # skip malformed lines
+            d, h = parts
             if str(d) == str(dia) and h == hora:
                 return True
     return False
+
 
 
 # ------------------------------

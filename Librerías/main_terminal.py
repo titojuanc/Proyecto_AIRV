@@ -143,11 +143,12 @@ def set_alarm():
     if request.method == 'POST':
         fecha = request.form['fecha']
         hora = calend_logic.formatear_hora(request.form['hora'])
-        if hora and not calend_logic.check_alarm(fecha, hora):
+        if len(fecha) == 8 and hora and not calend_logic.check_alarm(fecha, hora):
             calend_logic.set_alarm(fecha, hora)
             return redirect(url_for('index'))
         else:
-            return "Hora inválida o alarma ya existente."
+            return "Fecha u hora inválida o alarma ya existente."
+
     return render_template('alarms.html')
 
 # ------------------- MENSAJERÍA -------------------
