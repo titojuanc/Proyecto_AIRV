@@ -6,17 +6,10 @@ import time
 import pyautogui
 from datetime import datetime, timedelta
 import asyncio
-import sys
-import sys
 import os
+from reconocimiento_voz import escuchar_responder
 
-ruta_voz = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'reconocimiento_voz'))
-if ruta_voz not in sys.path:
-    sys.path.append(ruta_voz)
-    
-import escuchar_responder
-
-archivo_contactos = "Proyecto_AIRV/Librerías/mensajeria/contactos.json"
+archivo_contactos = "Librerías/mensajeria/contactos.json"
 
 def enfocar_ventana_firefox():
     os.system("wmctrl -a 'Firefox'")

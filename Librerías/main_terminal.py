@@ -195,7 +195,7 @@ def enviar_mensaje_api():
     mensaje = data.get("mensaje")
     if not nombre or not mensaje:
         return jsonify({"error": "Faltan datos"}), 400
-    mt.enviar_mensaje_thread(nombre, mensaje)
+    mt.enviar_mensaje(nombre, mensaje)
     return jsonify({"status": "mensaje en proceso de envío"})
 
 # ------------------- ACCIONES POR VOZ U OTRAS -------------------
