@@ -15,7 +15,7 @@ Acá voy a dejar las tareas pendientes que tiene cada integrante:
 # TAREAS PENDIENTES:
 - Crear la interfaz gráfica (main de web).
 - Testear la compatibilidad entre los dos mains.
-- Agregar la funcionalidad de silenciado de micrófono.
+- ~Agregar la funcionalidad de silenciado de micrófono.~
 - ~Organizar el repositorio~
-- Refactorizar las rutas de archivos.
+- ~Refactorizar las rutas de archivos.~
 - ~Hacer la interfaz gráfica con la misma estética en todas sus secciones.~
