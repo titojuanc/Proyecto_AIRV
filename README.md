@@ -1,5 +1,5 @@
 # Proyecto_AIRV
-## DOCUMENTACIÓN DEL PROYECTO: [https://politecnicomodelo-my.sharepoint.com/:f:/g/personal/alumno26_melgarejo_juan_ipm_edu_ar/Eg4DqVRZEr9EsyHg-8q-WakBGk6jN6Iw3lvaBWs9mW2qLA?e=XsEw2O](https://politecnicomodelo-my.sharepoint.com/:w:/g/personal/alumno26_melgarejo_juan_ipm_edu_ar/EYnQ7CFsN21MpCU4MyrBmFMBFTWoL3C7JifOdycmGunWTA?e=TDQm4L)
+## DOCUMENTACIÓN DEL PROYECTO: https://politecnicomodelo-my.sharepoint.com/:w:/g/personal/alumno26_melgarejo_juan_ipm_edu_ar/EUhawHRyvPJHjzwa6M_FYmsBI4JmvdmIrSN4cHcwIcCxGQ?e=oAAZ78
 
 Acá voy a dejar las tareas pendientes que tiene cada integrante:
 
