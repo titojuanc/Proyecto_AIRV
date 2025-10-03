@@ -1,19 +1,22 @@
 import threading
-import pywhatkit
 import json
 import os
 import time
 import pyautogui
+import webbrowser
 from datetime import datetime, timedelta
 import asyncio
-import os
 from reconocimiento_voz import escuchar_responder
+import urllib.parse
 
 archivo_contactos = "Librerías/mensajeria/contactos.json"
 
+# Variable global para controlar el envío
+envio_en_progreso = False
+
 def enfocar_ventana_firefox():
     os.system("wmctrl -a 'Firefox'")
-    time.sleep(1)
+    time.sleep(2)
 
 def cargar_contactos():
     if os.path.exists(archivo_contactos):
@@ -89,36 +92,162 @@ def nuevo_contacto(contactos):
     guardar_contactos(contactos)
     asyncio.run(escuchar_responder.speak(f"Contacto '{nombre}' agregado."))
 
-def enviar_mensaje(contactos, nombre, mensaje):
-    numero = buscar_contacto(contactos, nombre)
-    if not numero:
-        asyncio.run(escuchar_responder.speak(f"Contacto '{nombre}' no encontrado. ¿Quiere agregarlo?"))
-        rta = escuchar_responder.listen()
-        while rta is None:
+def enviar_mensaje_whatsapp_directo(numero, mensaje):
+    """Envía mensaje directamente usando URL de WhatsApp Web"""
+    try:
+        # Codificar el mensaje para URL
+        mensaje_codificado = urllib.parse.quote(mensaje)
+        
+        # Crear URL de WhatsApp
+        url = f"https://web.whatsapp.com/send?phone={numero}&text={mensaje_codificado}"
+        
+        # Abrir en Firefox
+        webbrowser.get('firefox').open(url)
+        
+        # Esperar a que cargue la página
+        time.sleep(15)
+        
+        # Enfocar la ventana
+        enfocar_ventana_firefox()
+        
+        # Presionar Enter para enviar el mensaje
+        pyautogui.press('enter')
+        
+        # Esperar a que se envíe
+        time.sleep(5)
+        
+        # Cerrar la pestaña
+        pyautogui.hotkey('ctrl', 'w')
+        
+        return True
+        
+    except Exception as e:
+        print(f"Error en envío directo: {e}")
+        return False
+
+def enviar_mensaje(contactos, nombre, mensaje, speak_callback=None):
+    global envio_en_progreso
+    
+    if envio_en_progreso:
+        if speak_callback:
+            asyncio.run(speak_callback("Ya hay un mensaje en proceso de envío. Espere a que termine."))
+        return
+        
+    envio_en_progreso = True
+    
+    try:
+        numero = buscar_contacto(contactos, nombre)
+        if not numero:
+            if speak_callback:
+                asyncio.run(speak_callback(f"Contacto '{nombre}' no encontrado. ¿Quiere agregarlo?"))
             rta = escuchar_responder.listen()
-        rta = rta.strip().lower()
-        if "si" in rta or "sí" in rta:
-            nuevo_contacto(contactos)
-        else:
+            while rta is None:
+                rta = escuchar_responder.listen()
+            rta = rta.strip().lower()
+            if "si" in rta or "sí" in rta:
+                nuevo_contacto(contactos)
+            envio_en_progreso = False
             return
 
-    ahora = datetime.now()
-    envio = ahora + timedelta(minutes=2)
-    envio = envio.replace(second=0, microsecond=0)
+        print(f"Enviando mensaje a {nombre} ({numero})")
+        if speak_callback:
+            asyncio.run(speak_callback(f"Enviando mensaje a {nombre}"))
 
-    try:
-        pywhatkit.sendwhatmsg(numero, mensaje, envio.hour, envio.minute)
-        enfocar_ventana_firefox()
-        segundos_espera = (envio - datetime.now()).total_seconds() + 5
-        if segundos_espera > 0:
-            time.sleep(segundos_espera)
-        pyautogui.hotkey('ctrl', 'w')
+        # Usar método directo sin pywhatkit
+        if enviar_mensaje_whatsapp_directo(numero, mensaje):
+            if speak_callback:
+                asyncio.run(speak_callback("Mensaje enviado correctamente"))
+        else:
+            if speak_callback:
+                asyncio.run(speak_callback("Error al enviar el mensaje"))
+        
     except Exception as e:
-        print("Error enviando el mensaje:", e)
+        print(f"Error enviando el mensaje: {e}")
+        if speak_callback:
+            asyncio.run(speak_callback("Hubo un error al enviar el mensaje"))
+        
+    finally:
+        envio_en_progreso = False
+
+# Versión con Selenium mejorada
+def enviar_mensaje_selenium(contactos, nombre, mensaje, speak_callback=None):
+    """
+    Versión usando Selenium con mejor control
+    """
+    global envio_en_progreso
+    
+    if envio_en_progreso:
+        if speak_callback:
+            asyncio.run(speak_callback("Ya hay un mensaje en proceso. Espere."))
+        return
+        
+    envio_en_progreso = True
+    
+    try:
+        from selenium import webdriver
+        from selenium.webdriver.common.by import By
+        from selenium.webdriver.support.ui import WebDriverWait
+        from selenium.webdriver.support import expected_conditions as EC
+        from selenium.webdriver.firefox.options import Options
+        
+        numero = buscar_contacto(contactos, nombre)
+        if not numero:
+            if speak_callback:
+                asyncio.run(speak_callback(f"Contacto '{nombre}' no encontrado"))
+            envio_en_progreso = False
+            return
+
+        # Configurar Firefox para usar perfil existente (opcional)
+        options = Options()
+        
+        driver = webdriver.Firefox(options=options)
+        
+        try:
+            # Codificar el mensaje para URL
+            mensaje_codificado = urllib.parse.quote(mensaje)
+            
+            # Crear la URL de WhatsApp
+            url = f"https://web.whatsapp.com/send?phone={numero}&text={mensaje_codificado}"
+            
+            driver.get(url)
+            
+            # Esperar a que cargue la página y el botón de enviar esté disponible
+            wait = WebDriverWait(driver, 30)
+            enviar_btn = wait.until(EC.element_to_be_clickable((By.XPATH, '//span[@data-icon="send"]')))
+            
+            # Pequeña pausa antes de enviar
+            time.sleep(2)
+            
+            # Enviar mensaje
+            enviar_btn.click()
+            
+            # Esperar a que se envíe
+            time.sleep(5)
+            
+            if speak_callback:
+                asyncio.run(speak_callback("Mensaje enviado correctamente"))
+            
+        finally:
+            # Cerrar el navegador
+            driver.quit()
+            time.sleep(2)  # Esperar a que se cierre completamente
+        
+    except Exception as e:
+        print(f"Error con Selenium: {e}")
+        if speak_callback:
+            asyncio.run(speak_callback("Error al enviar el mensaje con Selenium"))
+        
+    finally:
+        envio_en_progreso = False
 
 # Envolturas para ejecutar en hilos
 def enviar_mensaje_thread(contactos, nombre, mensaje):
-    threading.Thread(target=enviar_mensaje, args=(contactos, nombre, mensaje)).start()
+    # No usar speak en el hilo secundario - solo en el principal
+    threading.Thread(target=enviar_mensaje, args=(contactos, nombre, mensaje, None)).start()
+
+def enviar_mensaje_selenium_thread(contactos, nombre, mensaje):
+    # No usar speak en el hilo secundario - solo en el principal
+    threading.Thread(target=enviar_mensaje_selenium, args=(contactos, nombre, mensaje, None)).start()
 
 def main():
     contactos = cargar_contactos()
@@ -140,14 +269,30 @@ def main():
 
         elif "agregar contacto" in opcion:
             asyncio.run(escuchar_responder.speak("Solo terminal"))
-            #nuevo_contacto(contactos)
 
         elif "enviar mensaje" in opcion:
             asyncio.run(escuchar_responder.speak("¿Quién es el destinatario?"))
-            nombre = escuchar_responder.listen().strip()
+            nombre = escuchar_responder.listen()
+            if nombre is None:
+                asyncio.run(escuchar_responder.speak("No entendí el nombre"))
+                continue
+            nombre = nombre.strip()
+            
             asyncio.run(escuchar_responder.speak("¿Cuál es el mensaje?"))
-            mensaje = escuchar_responder.listen().strip()
-            enviar_mensaje_thread(contactos, nombre, mensaje)
+            mensaje = escuchar_responder.listen()
+            if mensaje is None:
+                asyncio.run(escuchar_responder.speak("No entendí el mensaje"))
+                continue
+            mensaje = mensaje.strip()
+            
+            # Hablar solo desde el hilo principal
+            asyncio.run(escuchar_responder.speak(f"Enviando mensaje a {nombre}"))
+            
+            # Ejecutar en hilo sin speak duplicado
+            threading.Thread(target=enviar_mensaje, args=(contactos, nombre, mensaje, None)).start()
+            
+            # O usar Selenium
+            # threading.Thread(target=enviar_mensaje_selenium, args=(contactos, nombre, mensaje, None)).start()
 
         elif "eliminar contacto" in opcion:
             asyncio.run(escuchar_responder.speak("¿Qué contacto quiere eliminar?"))
@@ -159,9 +304,6 @@ def main():
             eliminar_contacto(contactos, nombre)
 
         elif "modificar contacto" in opcion:
-            #asyncio.run(escuchar_responder.speak("¿Que contacto quiere modificar?"))
-            #nombre_actual=escuchar_responder.listen()
-            #modificar_contacto(contactos, nombre_actual)
             asyncio.run(escuchar_responder.speak("Solo terminal"))
 
         elif "ayuda" in opcion or "qué puedo hacer" in opcion or "que puedo hacer" in opcion:
@@ -169,6 +311,7 @@ def main():
                 "Puedes; mostrar contactos; agregar contacto; enviar mensaje; eliminar contacto; modificar contacto"))
 
         elif "salir mensajería" in opcion:
+            asyncio.run(escuchar_responder.speak("Saliendo de mensajería"))
             break
         
         else:

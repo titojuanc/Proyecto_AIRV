@@ -43,3 +43,18 @@ Time: 13:36
 Phone Number: +5491163080765
 Message: Hola, Prueba
 --------------------
+Date: 3/10/2025
+Time: 13:42
+Phone Number: +5491122445939
+Message: Hola, ahora te estoy mandando un mensaje con un bot que cree en clase
+--------------------
+Date: 3/10/2025
+Time: 14:1
+Phone Number: +54911 22445939
+Message: hola robot
+--------------------
+Date: 3/10/2025
+Time: 14:17
+Phone Number: +5491122445939
+Message: Hola, otra vez
+--------------------

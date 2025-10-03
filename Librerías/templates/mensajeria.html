@@ -69,7 +69,6 @@
   </div>
 
 <script>
-// same JS logic from original, unchanged
 async function cargarContactos() {
   const res = await fetch('/contactos');
   const contactos = await res.json();
@@ -83,8 +82,9 @@ async function cargarContactos() {
   }
   setStatus("Contactos cargados.");
 }
+
 async function agregarContacto() {
-  const nombre = document.getElementById('nombreAgregar').value.trim();
+  const nombre = document.getElementById('nombreAgregar').value.trim().toLowerCase(); // Convertir a minúsculas
   const numero = document.getElementById('numeroAgregar').value.trim();
   if (!nombre || !numero) { setStatus("Completa nombre y número.", true); return; }
   const res = await fetch('/contactos', {
@@ -92,12 +92,19 @@ async function agregarContacto() {
     body: JSON.stringify({ nombre, numero })
   });
   const data = await res.json();
-  if (data.status === "ok") { setStatus("Contacto agregado."); cargarContactos(); }
+  if (data.status === "ok") { 
+    setStatus("Contacto agregado."); 
+    cargarContactos(); 
+    // Limpiar campos después de agregar
+    document.getElementById('nombreAgregar').value = '';
+    document.getElementById('numeroAgregar').value = '';
+  }
   else setStatus("Error agregando contacto.", true);
 }
+
 async function modificarContacto() {
-  const nombre_actual = document.getElementById('nombreMod').value.trim();
-  const nuevo_nombre = document.getElementById('nuevoNombreMod').value.trim();
+  const nombre_actual = document.getElementById('nombreMod').value.trim().toLowerCase(); // Convertir a minúsculas
+  const nuevo_nombre = document.getElementById('nuevoNombreMod').value.trim().toLowerCase(); // Convertir a minúsculas
   const nuevo_numero = document.getElementById('nuevoNumeroMod').value.trim();
   if (!nombre_actual || !nuevo_nombre || !nuevo_numero) { setStatus("Completa todos los campos.", true); return; }
   const res = await fetch('/contactos', {
@@ -105,22 +112,36 @@ async function modificarContacto() {
     body: JSON.stringify({ nombre_actual, nuevo_nombre, nuevo_numero })
   });
   const data = await res.json();
-  if (data.status === "ok") { setStatus("Contacto modificado."); cargarContactos(); }
+  if (data.status === "ok") { 
+    setStatus("Contacto modificado."); 
+    cargarContactos(); 
+    // Limpiar campos después de modificar
+    document.getElementById('nombreMod').value = '';
+    document.getElementById('nuevoNombreMod').value = '';
+    document.getElementById('nuevoNumeroMod').value = '';
+  }
   else setStatus("Error modificando contacto.", true);
 }
+
 async function eliminarContacto() {
-  const nombre = document.getElementById('nombreEliminar').value.trim();
+  const nombre = document.getElementById('nombreEliminar').value.trim().toLowerCase(); // Convertir a minúsculas
   if (!nombre) { setStatus("Completa el nombre.", true); return; }
   const res = await fetch('/contactos', {
     method: 'DELETE', headers: {'Content-Type':'application/json'},
     body: JSON.stringify({ nombre })
   });
   const data = await res.json();
-  if (data.status === "ok") { setStatus("Contacto eliminado."); cargarContactos(); }
+  if (data.status === "ok") { 
+    setStatus("Contacto eliminado."); 
+    cargarContactos(); 
+    // Limpiar campo después de eliminar
+    document.getElementById('nombreEliminar').value = '';
+  }
   else setStatus("Contacto no encontrado.", true);
 }
+
 async function enviarMensaje() {
-  const nombre = document.getElementById('nombreMensaje').value.trim();
+  const nombre = document.getElementById('nombreMensaje').value.trim().toLowerCase(); // Convertir a minúsculas
   const mensaje = document.getElementById('textoMensaje').value.trim();
   if (!nombre || !mensaje) { setStatus("Completa destinatario y mensaje.", true); return; }
   const res = await fetch('/enviar', {
@@ -128,9 +149,15 @@ async function enviarMensaje() {
     body: JSON.stringify({ nombre, mensaje })
   });
   const data = await res.json();
-  if (data.status) { setStatus("Mensaje en proceso de envío."); }
+  if (data.status) { 
+    setStatus("Mensaje en proceso de envío."); 
+    // Limpiar campos después de enviar
+    document.getElementById('nombreMensaje').value = '';
+    document.getElementById('textoMensaje').value = '';
+  }
   else setStatus("Error enviando mensaje.", true);
 }
+
 function setStatus(msg, error=false) {
   const statusDiv = document.getElementById('status');
   statusDiv.textContent = msg;
