@@ -60,9 +60,16 @@ def modificar_contacto(nombre_actual, nuevo_nombre, nuevo_numero):
     return True
 
 def enfocar_firefox():
-    # Lista todas las ventanas y enfoca la que contiene "Mozilla Firefox"
-    os.system('wmctrl -a "Mozilla Firefox"')
-    time.sleep(1)
+    try:
+        # Intentar enfocar Firefox
+        os.system('wmctrl -a "Mozilla Firefox"')
+        time.sleep(2)
+        
+        # Alternativa: también intentar con el nombre de la pestaña
+        os.system('wmctrl -a "WhatsApp Web"')
+        time.sleep(1)
+    except Exception as e:
+        print(f"[Error] No se pudo enfocar Firefox: {e}")
 
 # Ejemplo dentro de enviar_mensaje
 def enviar_mensaje(nombre, mensaje):
@@ -76,12 +83,32 @@ def enviar_mensaje(nombre, mensaje):
     envio = envio.replace(second=0, microsecond=0)
 
     try:
+        print(f"[WhatsApp] Enviando mensaje a {nombre} ({numero})")
+        print(f"[WhatsApp] Programado para: {envio.strftime('%H:%M')}")
+        
         pywhatkit.sendwhatmsg(numero, mensaje, envio.hour, envio.minute)
+        
+        # Esperar un poco antes de enfocar
+        time.sleep(3)
+        
         enfocar_firefox()
-        time.sleep(5)  # Esperar que cargue WhatsApp Web
-        #pyautogui.hotkey('ctrl', 'w')  # Cierra pestaña WhatsApp web
+        
+        # Esperar más tiempo para que WhatsApp Web cargue completamente
+        print("[WhatsApp] Esperando carga de WhatsApp Web...")
+        time.sleep(10)  # Aumentar a 10 segundos
+        
+        # Presionar Enter para asegurar el envío (a veces es necesario)
+        pyautogui.press('enter')
+        time.sleep(2)
+        
+        # Cerrar la pestaña
+        pyautogui.hotkey('ctrl', 'w')
+        
+        print("[WhatsApp] Mensaje enviado exitosamente")
         return True, "Mensaje enviado"
+        
     except Exception as e:
+        print(f"[WhatsApp] Error: {str(e)}")
         return False, str(e)
 
 # Hilo para enviar mensaje sin bloquear Flask

@@ -12,6 +12,24 @@ CORS(app)
 # Variables de volumen
 volumeFactor = 100
 lastVolume = 100
+#-------------------- Temporal ---------------------
+
+@app.route("/debug_enviar", methods=["POST"])
+def debug_enviar_mensaje():
+    """Endpoint para debugging del envío de mensajes"""
+    data = request.json
+    nombre = data.get("nombre")
+    mensaje = data.get("mensaje")
+    
+    contactos = mt.cargar_contactos()
+    numero = mt.buscar_contacto(contactos, nombre)
+    
+    return jsonify({
+        "contacto_encontrado": bool(numero),
+        "numero": numero,
+        "total_contactos": len(contactos)
+    })
+
 
 # ------------------- RUTAS HTML -------------------
 
