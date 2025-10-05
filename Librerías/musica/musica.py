@@ -7,13 +7,18 @@ import asyncio
 import sys
 import os
 
+# Ruta para importar el módulo de reconocimiento de voz
 ruta_voz = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'reconocimiento_voz'))
 if ruta_voz not in sys.path:
     sys.path.append(ruta_voz)
     
-import escuchar_responder
+import escuchar_responder  # Módulo propio para escuchar comandos y responder con voz
 
-# Autenticación con Spotify
+
+# ------------------------------
+# AUTENTICACIÓN SPOTIFY
+# ------------------------------
+# Se configura la conexión con la API de Spotify
 sp = spotipy.Spotify(auth_manager=SpotifyOAuth(
     client_id='b58173fc52b8464185eb93fe5cb77db9',
     client_secret='742e6c91ccf741588937c55b8b91f5f5',
@@ -22,14 +27,21 @@ sp = spotipy.Spotify(auth_manager=SpotifyOAuth(
 ))
 
 web_abierto = False
-device_id = None
+device_id = None  # Identificador del dispositivo activo
 
+
+# ------------------------------
+# FUNCIONES AUXILIARES
+# ------------------------------
+
+# Verifica si Spotify ya se está ejecutando en el sistema
 def spotify_esta_corriendo():
     for proc in psutil.process_iter(['name']):
         if proc.info['name'] and 'spotify' in proc.info['name'].lower():
             return True
     return False
 
+# Abre la aplicación Spotify desde la terminal
 def abrir_spotify():
     try:
         subprocess.Popen(['spotify'])
@@ -37,6 +49,7 @@ def abrir_spotify():
     except Exception as e:
         print(f"No se pudo abrir Spotify: {e}")
 
+# Espera hasta que haya un dispositivo conectado a Spotify
 def wait_conected_device(timeout=60):
     if not spotify_esta_corriendo():
         abrir_spotify()
@@ -44,7 +57,7 @@ def wait_conected_device(timeout=60):
     for i in range(timeout):
         devices = sp.devices().get("devices", [])
         if devices:
-            device = devices[0]  # Elegimos el primero
+            device = devices[0]  # Usa el primer dispositivo disponible
             device_id = device['id']
             try:
                 sp.transfer_playback(device_id=device_id, force_play=False)
@@ -58,14 +71,20 @@ def wait_conected_device(timeout=60):
 
     raise Exception("No se detectó un dispositivo en el tiempo esperado.")
 
+# Activa un dispositivo temporal reproduciendo y pausando algo rápidamente
 def activar_dispositivo_temporal():
     global device_id
     device_id = wait_conected_device()
-    # Reproduce algo corto para activar el dispositivo
     sp.start_playback(device_id=device_id, context_uri="spotify:album:3Xiz5kq12VOzTw9Kun7m0f")
     time.sleep(1)
     sp.pause_playback(device_id=device_id)
 
+
+# ------------------------------
+# FUNCIONES DE BÚSQUEDA Y REPRODUCCIÓN
+# ------------------------------
+
+# Buscar y reproducir un álbum
 def search_album():
     results, album_name = search("album")
     if results['albums']['items']:
@@ -76,13 +95,14 @@ def search_album():
                 play("album", uri)
                 return
         
+        # Si no se encuentra coincidencia exacta, se reproduce la más cercana
         escuchar_responder.asyncio.run(escuchar_responder.speak("No estoy segura de que sea el álbum exacto, te reproduzco la mejor coincidencia."))
         uri = results['albums']['items'][0]['uri']
         play("album", uri)
     else:
         escuchar_responder.asyncio.run(escuchar_responder.speak("No se encontró el álbum."))
 
-
+# Reproduce en Spotify un track o álbum dependiendo del tipo
 def play(tipo, uri):
     global device_id
     if device_id is None:
@@ -93,6 +113,7 @@ def play(tipo, uri):
     elif tipo == 'album':
         sp.start_playback(device_id=device_id, context_uri=uri)
 
+# Buscar y reproducir una canción
 def search_cancion():
     results, song = search("track")
     if results and 'tracks' in results and results['tracks']['items']:
@@ -102,11 +123,13 @@ def search_cancion():
                 play("track", uri)
                 escuchar_responder.asyncio.run(escuchar_responder.speak("No estoy segura de que sea la canción exacta, te reproduzco la mejor coincidencia."))
                 return
+        # Si no hay coincidencia exacta, reproducir la primera encontrada
         uri = results['tracks']['items'][0]['uri']
         play("track", uri)
     else:
         escuchar_responder.asyncio.run(escuchar_responder.speak("No se encontró la canción."))
 
+# Función genérica para buscar álbum o canción
 def search(tipo):
     pause()
     escuchar_responder.asyncio.run(escuchar_responder.speak(f"¿Qué {tipo} quiere reproducir?"))
@@ -121,7 +144,12 @@ def search(tipo):
     return results, query
 
 
+# ------------------------------
+# CONTROL DE REPRODUCCIÓN
+# ------------------------------
+
 def next():
+    """Pasa a la siguiente canción"""
     global device_id
     if device_id is None:
         try:
@@ -135,18 +163,14 @@ def next():
         if not playback or not playback.get('is_playing'):
             print("No hay nada reproduciéndose, no se puede avanzar.")
             resume()
-            
-            
-
         sp.next_track()
         print("Pasando a la siguiente canción.")
         time.sleep(2)  
     except Exception as e:
         print(f"Error al pasar a la siguiente canción: {e}")
 
-
-
 def previous():
+    """Vuelve a la canción anterior"""
     global device_id
     if device_id is None:
         try:
@@ -160,17 +184,14 @@ def previous():
         if not playback or not playback.get('is_playing'):
             print("No hay nada reproduciéndose, no se puede retroceder.")
             resume()
-            
-
         sp.previous_track()
         print("Volviendo a la canción anterior.")
         time.sleep(2)
     except Exception as e:
         print(f"Error al volver a la canción anterior: {e}")
 
-
-
 def pause():
+    """Pausa la reproducción actual"""
     global device_id
     if device_id is None:
         try:
@@ -188,8 +209,8 @@ def pause():
     except Exception as e:
         print(f"Error al pausar la reproducción: {e}")
 
-
 def resume():
+    """Reanuda la reproducción"""
     global device_id
     if device_id is None:
         try:
@@ -203,7 +224,13 @@ def resume():
     except Exception as e:
         print(f"Error al reanudar la reproducción: {e}")
 
+
+# ------------------------------
+# PROGRAMA PRINCIPAL
+# ------------------------------
+
 def main():
+    # Mensaje de bienvenida
     asyncio.run(escuchar_responder.speak("Bienvenido a Spotify. Diga 'ayuda' para conocer los comandos. Reproducir random para empezar"))
     activar_dispositivo_temporal()
     while True:
@@ -214,10 +241,12 @@ def main():
 
         comando = comando.lower()
 
+        # Salir del programa
         if "salir" in comando or "terminar" in comando or "cerrar" in comando:
             asyncio.run(escuchar_responder.speak("Adiós, cerrando Spotify."))
             break
 
+        # Control de reproducción
         elif "siguiente" in comando or "pasar canción" in comando or "próxima" in comando:
             next()
             asyncio.run(escuchar_responder.speak("Pasando a la siguiente canción."))
@@ -232,18 +261,19 @@ def main():
         elif "reanudar" in comando or "continuar" in comando:
             resume()
 
+        # Búsqueda de música
         elif "álbum" in comando or "album" in comando:
             search_album()
 
         elif "canción" in comando or "cancion" in comando:
             search_cancion()
 
+        # Ayuda
         elif "ayuda" in comando:
             texto_ayuda = ("Puedes decir: siguiente, anterior, pausar, reanudar, "
                            "buscar canción, buscar álbum, o salir para terminar.")
             asyncio.run(escuchar_responder.speak(texto_ayuda))
 
+        # Comando no entendido
         else:
             asyncio.run(escuchar_responder.speak("No entendí el comando, por favor repite."))
-
-
