@@ -15,10 +15,18 @@ archivo_contactos = "Librerías/mensajeria/contactos.json"
 envio_en_progreso = False
 
 def enfocar_ventana_firefox():
+    """
+    Enfoca la ventana de Firefox en el sistema usando 'wmctrl'
+    y espera 2 segundos para asegurar que la ventana esté activa.
+    """
     os.system("wmctrl -a 'Firefox'")
     time.sleep(2)
 
 def cargar_contactos():
+    """
+    Carga los contactos desde el archivo JSON.
+    Si el archivo no existe o está vacío, devuelve un diccionario vacío.
+    """
     if os.path.exists(archivo_contactos):
         with open(archivo_contactos, "r") as f:
             try:
@@ -28,13 +36,24 @@ def cargar_contactos():
     return {}
 
 def guardar_contactos(contactos):
+    """
+    Guarda los contactos en formato JSON en el archivo correspondiente.
+    """
     with open(archivo_contactos, "w") as f:
         json.dump(contactos, f, indent=4)
 
 def buscar_contacto(contactos, nombre):
+    """
+    Busca un contacto por nombre en el diccionario de contactos.
+    Devuelve el número asociado o None si no existe.
+    """
     return contactos.get(nombre)
 
 def eliminar_contacto(contactos, nombre):
+    """
+    Elimina un contacto del diccionario si existe.
+    Informa mediante voz si se eliminó o no se encontró.
+    """
     if nombre in contactos:
         del contactos[nombre]
         guardar_contactos(contactos)
@@ -43,6 +62,10 @@ def eliminar_contacto(contactos, nombre):
         asyncio.run(escuchar_responder.speak(f"No existe el contacto '{nombre}'."))
 
 def modificar_contacto(contactos, nombre_actual):
+    """
+    Permite modificar el nombre y/o número de un contacto existente,
+    interactuando por voz con el usuario.
+    """
     if nombre_actual in contactos:
         asyncio.run(escuchar_responder.speak(f"Dime un nuevo nombre para {nombre_actual}. Si no lo quiere cambiar, diga ;no quiero"))
         nuevo_nombre = escuchar_responder.listen()
@@ -72,6 +95,10 @@ def modificar_contacto(contactos, nombre_actual):
         print(f"No existe el contacto '{nombre_actual}'.")
 
 def nuevo_contacto(contactos):
+    """
+    Agrega un nuevo contacto al diccionario,
+    solicitando nombre y número mediante reconocimiento de voz.
+    """
     asyncio.run(escuchar_responder.speak("¿Cómo quiere llamar al contacto?"))
     nombre = escuchar_responder.listen()
     while nombre is None:
@@ -93,7 +120,10 @@ def nuevo_contacto(contactos):
     asyncio.run(escuchar_responder.speak(f"Contacto '{nombre}' agregado."))
 
 def enviar_mensaje_whatsapp_directo(numero, mensaje):
-    """Envía mensaje directamente usando URL de WhatsApp Web"""
+    """
+    Envía un mensaje a un número usando WhatsApp Web de forma directa,
+    abriendo Firefox y simulando la pulsación de 'Enter'.
+    """
     try:
         # Codificar el mensaje para URL
         mensaje_codificado = urllib.parse.quote(mensaje)
@@ -126,6 +156,10 @@ def enviar_mensaje_whatsapp_directo(numero, mensaje):
         return False
 
 def enviar_mensaje(contactos, nombre, mensaje, speak_callback=None):
+    """
+    Envía un mensaje a un contacto usando WhatsApp Web en un hilo separado.
+    Controla que no haya envíos en proceso simultáneamente.
+    """
     global envio_en_progreso
     
     if envio_en_progreso:
@@ -169,10 +203,10 @@ def enviar_mensaje(contactos, nombre, mensaje, speak_callback=None):
     finally:
         envio_en_progreso = False
 
-# Versión con Selenium mejorada
 def enviar_mensaje_selenium(contactos, nombre, mensaje, speak_callback=None):
     """
-    Versión usando Selenium con mejor control
+    Envía un mensaje usando WhatsApp Web con Selenium,
+    ofreciendo mayor control sobre la interacción que con pyautogui.
     """
     global envio_en_progreso
     
@@ -240,16 +274,26 @@ def enviar_mensaje_selenium(contactos, nombre, mensaje, speak_callback=None):
     finally:
         envio_en_progreso = False
 
-# Envolturas para ejecutar en hilos
 def enviar_mensaje_thread(contactos, nombre, mensaje):
-    # No usar speak en el hilo secundario - solo en el principal
+    """
+    Lanza el envío de un mensaje en un hilo separado
+    usando el método directo sin speak.
+    """
     threading.Thread(target=enviar_mensaje, args=(contactos, nombre, mensaje, None)).start()
 
 def enviar_mensaje_selenium_thread(contactos, nombre, mensaje):
-    # No usar speak en el hilo secundario - solo en el principal
+    """
+    Lanza el envío de un mensaje en un hilo separado
+    usando la versión con Selenium.
+    """
     threading.Thread(target=enviar_mensaje_selenium, args=(contactos, nombre, mensaje, None)).start()
 
 def main():
+    """
+    Función principal del programa.
+    Escucha comandos por voz y permite gestionar contactos
+    y enviar mensajes de WhatsApp mediante diferentes opciones.
+    """
     contactos = cargar_contactos()
 
     while True:
