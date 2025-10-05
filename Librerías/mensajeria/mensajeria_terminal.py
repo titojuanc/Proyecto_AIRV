@@ -9,6 +9,11 @@ import time
 archivo_contactos = "Librerías/mensajeria/contactos.json"
 
 def cargar_contactos():
+    """
+    Carga los contactos desde el archivo JSON.
+    Devuelve un diccionario con los contactos.
+    Si no existe o está vacío, devuelve {}.
+    """
     if os.path.exists(archivo_contactos):
         with open(archivo_contactos, "r") as f:
             try:
@@ -18,6 +23,10 @@ def cargar_contactos():
     return {}
 
 def guardar_contactos(contactos):
+    """
+    Guarda los contactos en el archivo JSON.
+    Si la carpeta no existe, la crea automáticamente.
+    """
     # Crear carpeta si no existe
     carpeta = os.path.dirname(archivo_contactos)
     os.makedirs(carpeta, exist_ok=True)
@@ -27,9 +36,17 @@ def guardar_contactos(contactos):
         json.dump(contactos, f, indent=4)
 
 def buscar_contacto(contactos, nombre):
+    """
+    Busca un contacto por nombre dentro del diccionario de contactos.
+    Devuelve el número o None si no existe.
+    """
     return contactos.get(nombre)
 
 def agregar_contacto(nombre, numero):
+    """
+    Agrega un nuevo contacto al archivo JSON.
+    Se asegura de que el número tenga el prefijo '+'.
+    """
     contactos = cargar_contactos()
     if not numero.startswith("+"):
         numero = "+" + numero
@@ -38,6 +55,10 @@ def agregar_contacto(nombre, numero):
     return True
 
 def eliminar_contacto(nombre):
+    """
+    Elimina un contacto por su nombre.
+    Devuelve True si se eliminó, False si no existía.
+    """
     contactos = cargar_contactos()
     if nombre in contactos:
         del contactos[nombre]
@@ -46,6 +67,11 @@ def eliminar_contacto(nombre):
     return False
 
 def modificar_contacto(nombre_actual, nuevo_nombre, nuevo_numero):
+    """
+    Modifica un contacto existente, permitiendo cambiar el nombre y el número.
+    Valida que el nuevo nombre no exista ya en la lista.
+    Devuelve True si la modificación fue exitosa, False en caso contrario.
+    """
     contactos = cargar_contactos()
     if nombre_actual not in contactos:
         return False
@@ -60,6 +86,10 @@ def modificar_contacto(nombre_actual, nuevo_nombre, nuevo_numero):
     return True
 
 def enfocar_firefox():
+    """
+    Intenta enfocar la ventana de Firefox usando 'wmctrl'.
+    Si no se puede, muestra un error por consola.
+    """
     try:
         # Intentar enfocar Firefox
         os.system('wmctrl -a "Mozilla Firefox"')
@@ -71,8 +101,14 @@ def enfocar_firefox():
     except Exception as e:
         print(f"[Error] No se pudo enfocar Firefox: {e}")
 
-# Ejemplo dentro de enviar_mensaje
 def enviar_mensaje(nombre, mensaje):
+    """
+    Envía un mensaje por WhatsApp Web al contacto indicado.
+    - Busca el número en los contactos guardados.
+    - Programa el envío un minuto después de la hora actual.
+    - Usa pywhatkit y pyautogui para automatizar la interacción.
+    Devuelve (True, mensaje) si tuvo éxito o (False, error) si falló.
+    """
     contactos = cargar_contactos()
     numero = buscar_contacto(contactos, nombre)
     if not numero:
@@ -111,6 +147,9 @@ def enviar_mensaje(nombre, mensaje):
         print(f"[WhatsApp] Error: {str(e)}")
         return False, str(e)
 
-# Hilo para enviar mensaje sin bloquear Flask
 def enviar_mensaje_thread(nombre, mensaje):
+    """
+    Inicia el envío de un mensaje en un hilo aparte
+    para no bloquear la ejecución principal (ej. Flask).
+    """
     threading.Thread(target=enviar_mensaje, args=(nombre, mensaje)).start()
