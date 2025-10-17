@@ -1,0 +1,5 @@
+#!/home/Alumno26.LOPEZ.CALO.Salvador@ipm.edu.ar/python311/local/bin/python3.11
+
+from idlelib.pyshell import main
+if __name__ == '__main__':
+    main()
