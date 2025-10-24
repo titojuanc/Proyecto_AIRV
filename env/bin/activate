@@ -38,7 +38,7 @@ deactivate () {
 # unset irrelevant variables
 deactivate nondestructive
 
-VIRTUAL_ENV="/home/Alumno26.NEGRI.Francisco@ipm.edu.ar/Escritorio/Proyecto_AIRV/env"
+VIRTUAL_ENV="/home/Alumno26.MELGAREJO.Juan@ipm.edu.ar/Escritorio/Proyecto_AIRV/env"
 export VIRTUAL_ENV
 
 _OLD_VIRTUAL_PATH="$PATH"

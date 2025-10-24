@@ -1,0 +1,3 @@
+[console_scripts]
+pactl-py=libpulse.pactl:script_main
+

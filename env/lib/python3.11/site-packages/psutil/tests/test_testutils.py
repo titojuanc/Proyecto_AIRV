@@ -324,6 +324,9 @@ class TestNetUtils(PsutilTestCase):
     @pytest.mark.skipif(
         NETBSD or FREEBSD, reason="/var/run/log UNIX socket opened by default"
     )
+    @pytest.mark.skipif(
+        not HAS_NET_CONNECTIONS_UNIX, reason="can't list UNIX sockets"
+    )
     def test_unix_socketpair(self):
         p = psutil.Process()
         num_fds = p.num_fds()
@@ -461,7 +464,7 @@ class TestFakePytest(PsutilTestCase):
         except AssertionError as err:
             assert str(err) == '"foo" does not match "bar"'  # noqa: PT017
         else:
-            raise pytest.fail("exception not raised")
+            return pytest.fail("exception not raised")
 
     def test_mark(self):
         @fake_pytest.mark.xdist_group(name="serial")
@@ -537,7 +540,7 @@ class TestFakePytest(PsutilTestCase):
         except AssertionError:
             pass
         else:
-            raise pytest.fail("exception not raised")
+            return pytest.fail("exception not raised")
 
         # match success
         with fake_pytest.warns(UserWarning, match="foo"):
@@ -550,7 +553,7 @@ class TestFakePytest(PsutilTestCase):
         except AssertionError:
             pass
         else:
-            raise pytest.fail("exception not raised")
+            return pytest.fail("exception not raised")
 
     def test_fail(self):
         with fake_pytest.raises(fake_pytest.fail.Exception):

@@ -80,7 +80,7 @@ __all__ = [
     # test utils
     'unittest', 'skip_on_access_denied', 'skip_on_not_implemented',
     'retry_on_failure', 'TestMemoryLeak', 'PsutilTestCase',
-    'process_namespace', 'system_namespace', 'print_sysinfo',
+    'process_namespace', 'system_namespace',
     'is_win_secure_system_proc', 'fake_pytest',
     # fs utils
     'chdir', 'safe_rmpath', 'create_py_exe', 'create_c_exe', 'get_testfn',
@@ -946,7 +946,7 @@ def create_c_exe(path, c_code=None):
     """Create a compiled C executable in the given location."""
     assert not os.path.exists(path), path
     if not shutil.which("gcc"):
-        raise pytest.skip("gcc is not installed")
+        return pytest.skip("gcc is not installed")
     if c_code is None:
         c_code = textwrap.dedent("""
             #include <unistd.h>
@@ -1060,7 +1060,7 @@ class PsutilTestCase(unittest.TestCase):
             try:
                 psutil.Process(pid)
             except psutil.ZombieProcess:
-                raise pytest.fail("wasn't supposed to raise ZombieProcess")
+                return pytest.fail("wasn't supposed to raise ZombieProcess")
         assert cm.value.pid == pid
         assert cm.value.name is None
         assert not psutil.pid_exists(pid), pid
@@ -1233,13 +1233,13 @@ class TestMemoryLeak(PsutilTestCase):
                 f"negative diff {diff!r} (gc probably collected a"
                 " resource from a previous test)"
             )
-            raise pytest.fail(msg)
+            return pytest.fail(msg)
         if diff > 0:
             type_ = "fd" if POSIX else "handle"
             if diff > 1:
                 type_ += "s"
             msg = f"{diff} unclosed {type_} after calling {fun!r}"
-            raise pytest.fail(msg)
+            return pytest.fail(msg)
 
     def _call_ntimes(self, fun, times):
         """Get 2 distinct memory samples, before and after having
@@ -1273,14 +1273,14 @@ class TestMemoryLeak(PsutilTestCase):
             if success:
                 if idx > 1:
                     self._log(msg)
-                return
+                return None
             else:
                 if idx == 1:
                     print()  # noqa: T201
                 self._log(msg)
                 times += increase
                 prev_mem = mem
-        raise pytest.fail(". ".join(messages))
+        return pytest.fail(". ".join(messages))
 
     # ---
 
@@ -1320,119 +1320,9 @@ class TestMemoryLeak(PsutilTestCase):
             except exc:
                 pass
             else:
-                raise pytest.fail(f"{fun} did not raise {exc}")
+                return pytest.fail(f"{fun} did not raise {exc}")
 
         self.execute(call, **kwargs)
-
-
-def print_sysinfo():
-    import collections
-    import datetime
-    import getpass
-    import locale
-    import pprint
-
-    try:
-        import pip
-    except ImportError:
-        pip = None
-    try:
-        import wheel
-    except ImportError:
-        wheel = None
-
-    info = collections.OrderedDict()
-
-    # OS
-    if psutil.LINUX and shutil.which("lsb_release"):
-        info['OS'] = sh('lsb_release -d -s')
-    elif psutil.OSX:
-        info['OS'] = f"Darwin {platform.mac_ver()[0]}"
-    elif psutil.WINDOWS:
-        info['OS'] = "Windows " + ' '.join(map(str, platform.win32_ver()))
-        if hasattr(platform, 'win32_edition'):
-            info['OS'] += ", " + platform.win32_edition()
-    else:
-        info['OS'] = f"{platform.system()} {platform.version()}"
-    info['arch'] = ', '.join(
-        list(platform.architecture()) + [platform.machine()]
-    )
-    if psutil.POSIX:
-        info['kernel'] = platform.uname()[2]
-
-    # python
-    info['python'] = ', '.join([
-        platform.python_implementation(),
-        platform.python_version(),
-        platform.python_compiler(),
-    ])
-    info['pip'] = getattr(pip, '__version__', 'not installed')
-    if wheel is not None:
-        info['pip'] += f" (wheel={wheel.__version__})"
-
-    # UNIX
-    if psutil.POSIX:
-        if shutil.which("gcc"):
-            out = sh(['gcc', '--version'])
-            info['gcc'] = str(out).split('\n')[0]
-        else:
-            info['gcc'] = 'not installed'
-        s = platform.libc_ver()[1]
-        if s:
-            info['glibc'] = s
-
-    # system
-    info['fs-encoding'] = sys.getfilesystemencoding()
-    lang = locale.getlocale()
-    info['lang'] = f"{lang[0]}, {lang[1]}"
-    info['boot-time'] = datetime.datetime.fromtimestamp(
-        psutil.boot_time()
-    ).strftime("%Y-%m-%d %H:%M:%S")
-    info['time'] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    info['user'] = getpass.getuser()
-    info['home'] = os.path.expanduser("~")
-    info['cwd'] = os.getcwd()
-    info['pyexe'] = PYTHON_EXE
-    info['hostname'] = platform.node()
-    info['PID'] = os.getpid()
-
-    # metrics
-    info['cpus'] = psutil.cpu_count()
-    info['loadavg'] = "{:.1f}%, {:.1f}%, {:.1f}%".format(
-        *tuple(x / psutil.cpu_count() * 100 for x in psutil.getloadavg())
-    )
-    mem = psutil.virtual_memory()
-    info['memory'] = "{}%%, used={}, total={}".format(
-        int(mem.percent),
-        bytes2human(mem.used),
-        bytes2human(mem.total),
-    )
-    swap = psutil.swap_memory()
-    info['swap'] = "{}%%, used={}, total={}".format(
-        int(swap.percent),
-        bytes2human(swap.used),
-        bytes2human(swap.total),
-    )
-
-    # constants
-    constants = sorted(
-        [k for k, v in globals().items() if k.isupper() and v is True]
-    )
-    info['constants'] = "\n                  ".join(constants)
-
-    # processes
-    info['pids'] = len(psutil.pids())
-    pinfo = psutil.Process().as_dict()
-    pinfo.pop('memory_maps', None)
-    pinfo["environ"] = {k: os.environ[k] for k in sorted(os.environ)}
-    info['proc'] = pprint.pformat(pinfo)
-
-    # print
-    print("=" * 70, file=sys.stderr)  # noqa: T201
-    for k, v in info.items():
-        print("{:<17} {}".format(k + ":", v), file=sys.stderr)  # noqa: T201
-    print("=" * 70, file=sys.stderr)  # noqa: T201
-    sys.stdout.flush()
 
 
 def is_win_secure_system_proc(pid):
@@ -1697,7 +1587,7 @@ def skip_on_access_denied(only_if=None):
                 if only_if is not None:
                     if not only_if:
                         raise
-                raise pytest.skip("raises AccessDenied")
+                return pytest.skip("raises AccessDenied")
 
         return wrapper
 
@@ -1720,7 +1610,7 @@ def skip_on_not_implemented(only_if=None):
                     f"{fun.__name__!r} was skipped because it raised"
                     " NotImplementedError"
                 )
-                raise pytest.skip(msg)
+                return pytest.skip(msg)
 
         return wrapper
 
