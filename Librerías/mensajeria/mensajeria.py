@@ -354,7 +354,7 @@ def main():
             asyncio.run(escuchar_responder.speak(
                 "Puedes; mostrar contactos; agregar contacto; enviar mensaje; eliminar contacto; modificar contacto"))
 
-        elif "salir mensajería" in opcion:
+        elif "salir" in opcion:
             asyncio.run(escuchar_responder.speak("Saliendo de mensajería"))
             break
         

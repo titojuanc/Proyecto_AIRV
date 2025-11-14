@@ -6,6 +6,10 @@ import pywhatkit
 import pyautogui
 import time
 import subprocess
+from reconocimiento_voz import escuchar_responder
+import asyncio
+from urllib.parse import quote
+    
 
 archivo_contactos = "Librerías/mensajeria/contactos.json"
 
@@ -76,15 +80,21 @@ def abrir_whatsapp(numero, mensaje):
     """
     Abre WhatsApp Web en Firefox en una pestaña nueva de la ventana existente.
     """
-    url = f"https://web.whatsapp.com/send?phone={numero}&text={mensaje}"
+    mensaje_codificado = quote(mensaje)
+    url = f"https://web.whatsapp.com/send?phone={numero}&text={mensaje_codificado}"
     try:
         # --new-tab asegura que use la ventana existente si está abierta
         subprocess.run(["firefox", "-P", "default", "--new-tab", url])
-        time.sleep(10)  # Esperar que cargue la página
+        #if primera_vez:
+        asyncio.run(escuchar_responder.speak("Es la primera vez, así que va a tardar en cargar"))
+            #time.sleep(60)
+        #else:
+        time.sleep(10)
     except Exception as e:
         print(f"[Error] No se pudo abrir WhatsApp Web: {e}")
 
-# Ejemplo dentro de enviar_mensaje
+#Primera vez
+primera_vez=True
 def enviar_mensaje(nombre, mensaje):
     contactos = cargar_contactos()
     numero = buscar_contacto(contactos, nombre)
@@ -98,7 +108,7 @@ def enviar_mensaje(nombre, mensaje):
     try:
         #print(f"[WhatsApp] Enviando mensaje a {nombre} ({numero})")
         #print(f"[WhatsApp] Programado para: {envio.strftime('%H:%M')}")
-        abrir_whatsapp(nombre, mensaje)
+        abrir_whatsapp(numero, mensaje)
         # Esperar un poco antes de enfocar
         time.sleep(10)
         

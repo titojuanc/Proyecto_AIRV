@@ -21,6 +21,7 @@ def looks_like_mac_with_dashes(name: str) -> bool:
 
 async def scan():
     """Escanea dispositivos Bluetooth cercanos, lista opciones por voz y permite seleccionar uno para conectar"""
+
     devices = await BleakScanner.discover()
     addresses=[]
     i=0
@@ -38,23 +39,25 @@ async def scan():
             if i==5:
                 break
     await escuchar_responder.speak("Que opción desea conectarse")
-    while opcion==None and device_adress==None:
+    while opcion==None or device_adress==None:
         opcion=escuchar_responder.listen()
 
      
-    match opcion:
-        case "opción uno":
-            device_adress= addresses[0]
-        case "opción dos":
-            device_adress= addresses[1]
-        case "opción tres":
-            device_adress= addresses[2]
-        case "opción cuatro":
-            device_adress= addresses[3]
-        case "opción cinco":
-            device_adress= addresses[4]
-        case _:
-            await escuchar_responder.speak(f"No entendí")
+        match opcion:
+            case "opción 1" :
+                device_adress= addresses[0]
+            case "opción 2":
+                device_adress= addresses[1]
+            case "opción 3":
+                device_adress= addresses[2]
+            case "opción 4":
+                device_adress= addresses[3]
+            case "opción 5":
+                device_adress= addresses[4]
+            case "ninguno":
+                break
+            case _:
+                await escuchar_responder.speak(f"No entendí")
     if(device_adress!=None):
         connect(device_adress)
 
@@ -116,39 +119,43 @@ def dispositivos_conectados():
                 break
         asyncio.run(escuchar_responder.speak("Qué dispositivo desea desconectar?"))
         device_adress=None
-        while respuesta==None and device_adress==None :
+        while respuesta==None or device_adress==None :
             respuesta=escuchar_responder.listen()
-        match respuesta:
-            case "opción uno":
-                device_adress= addresses[0]
-            case "opción dos":
-                if addresses.__len__>=1:
-                    device_adress= addresses[1]
-            case "opción tres":
-                if addresses.__len__>=2:
-                    device_adress= addresses[2]
-            case "opción cuatro":
-                if addresses.__len__>=3:
-                    device_adress= addresses[3]
-            case "opción cinco":
-                if addresses.__len__>=4:
-                    device_adress= addresses[4]
-            case _:
-                asyncio.run(escuchar_responder.speak(f"No entendí"))
+            match respuesta:
+                case "opción uno":
+                    device_adress= addresses[0]
+                case "opción dos":
+                    if addresses.__len__>=1:
+                        device_adress= addresses[1]
+                case "opción tres":
+                    if addresses.__len__>=2:
+                        device_adress= addresses[2]
+                case "opción cuatro":
+                    if addresses.__len__>=3:
+                        device_adress= addresses[3]
+                case "opción cinco":
+                    if addresses.__len__>=4:
+                        device_adress= addresses[4]
+                case "ninguno":
+                    break
+                case _:
+                    asyncio.run(escuchar_responder.speak(f"No entendí"))
         if device_adress!=None:
             disconnect(device_adress)
         
 def main():
     """Función principal que escucha la acción del usuario y llama a conectar o desconectar dispositivos"""
-    asyncio.run(escuchar_responder.speak("Opciones de bluetooth"))  # O algún mensaje o sonido de acknowledge
-    user_input = escuchar_responder.listen()
-    if user_input:
-        match user_input:
-            case "conectar dispositivo":
-                asyncio.run(scan())
-            case "desconectar dispositivo":
-                dispositivos_conectados()
-            case "salir":
-                return
-            case _:
-                asyncio.run(escuchar_responder.speak("No entendí"))  # O algún mensaje o sonido de acknowledge
+    while(True):
+        asyncio.run(escuchar_responder.speak("Opciones de bluetooth"))  # O algún mensaje o sonido de acknowledge
+        user_input = escuchar_responder.listen()
+        if user_input:
+            match user_input:
+                case "conectar dispositivo":
+                    asyncio.run(scan())
+                case "desconectar dispositivo":
+                    dispositivos_conectados()
+                case "salir":
+                    return
+                case _:
+                    asyncio.run(escuchar_responder.speak("No entendí"))  # O algún mensaje o sonido de acknowledge
+        

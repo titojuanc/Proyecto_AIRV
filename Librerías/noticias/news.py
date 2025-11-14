@@ -7,7 +7,7 @@ ruta_voz = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'recono
 if ruta_voz not in sys.path:
     sys.path.append(ruta_voz)
 
-from escuchar_responder import speak
+from reconocimiento_voz import escuchar_responder
 from bs4 import BeautifulSoup
 import asyncio
 
@@ -27,16 +27,16 @@ def fiveFirstHeaders():
     if response.status_code == 200:
         # Parsear contenido HTML de la página
         soup = BeautifulSoup(response.text, "html.parser")
-        headlines = soup.find_all("h2", class_="sc-9d830f2a-3")
+        headlines = soup.find_all("h2", class_="sc-fa814188-3 iCfgww")
 
         # Anunciar fuente de noticias
-        asyncio.run(speak("These are the top 5 latest news from " f"{URL}" + ":\n"))
+        asyncio.run(escuchar_responder.speak("These are the top 5 latest news from " f"{URL}" + ":\n"))
 
         # Recorrer los primeros 5 titulares
         for headline in headlines[:5]:
             description = headline.find_next("p")
             asyncio.run(
-                speak(
+                escuchar_responder.speak(
                     headline.text.strip() + ":\n"
                     + (description.text.strip() if description else "No description found.")
                     + "\n"
